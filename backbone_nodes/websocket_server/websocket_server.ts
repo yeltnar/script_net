@@ -1,22 +1,24 @@
 import sortObject from "../../sortObject";
-import PendingEventEmitter from "../PendingEventEmitter/PendingEventEmitter"
+import {PendingEventEmitter} from "../PendingEventEmitter/PendingEventEmitter"
 
 const WebSocket = require('ws');
 const http = require("http");
 
+const pingInterval = 1000*60;// 1 min // TODO move
+
 class WsServer{
 
     wss; // instance of web socket server
-    pending_event_emitter;
+    pending_event_emitter:PendingEventEmitter;
 
     constructor( pending_event_emitter:PendingEventEmitter, server? ){
 
         this.pending_event_emitter = pending_event_emitter;
         
-        server = server || this.createHttpServer();
+        server = server || this.createFallbackHttpServer();
     }
 
-    createHttpServer=()=>{
+    createFallbackHttpServer=()=>{
 
         const server = http.createServer(function(request, response) {
             console.log((new Date()) + ' Received request for ' + request.url);
@@ -38,14 +40,14 @@ class WsServer{
     
         wss.on('connection', (ws, req)=>{
     
-            console.log("new connection")
+            console.log("new ws connection")
     
             ws.isAlive = true;
     
-            ws.on("message", (msg)=>{
+            ws.on("message", (msg:object)=>{
                 if( checkRequiredFields(msg) ){
                     msg = sortObject(msg);
-                    ee.emit( JSON.stringify(msg) );
+                    this.pending_event_emitter.emit( msg );
                 }
             })
     
@@ -78,9 +80,12 @@ class WsServer{
             });
         });
     
-        console.log("wsInit done")
-        return {sendToSockets};
+        console.log("wsInit done");
     }
+}
+
+function checkRequiredFields( obj:any ){
+    return true;
 }
 
 export default WsServer;

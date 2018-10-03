@@ -17,23 +17,24 @@ class PendingEventEmitter{
     constructor(){
         this.event_emitter = new EventEmitter();
 
-        this.event_emitter.once("a", (d)=>{
-            console.log("d...");
-            console.log(d);
-        })
-        this.event_emitter.emit("a", {"data":"data"});
     }
 
-    emit=( event:any/*should be an object*/ )=>{
+    emit=( event:object, obj?:any )=>{
         return new Promise((resolve, reject)=>{
+
+            if( typeof event!=="object" ){
+                const err_str = "event must be an object";
+                reject(err_str);
+                throw new Error(err_str);
+            }
 
             //event = sortObject(event); // TODO remove this from others
 
-            if( event.uuid ){
+            if( event["uuid"] ){
                 console.warn("event.uuid is defined...I don't think it should ever be");
             }
 
-            const uuid = event.uuid || uuid_v4();
+            const uuid = event["uuid"] || uuid_v4();
 
             const once_event = {state:"DONE", uuid}; // TODO use interface?
             const once_event_string = JSON.stringify(once_event);
@@ -44,6 +45,8 @@ class PendingEventEmitter{
             this.event_emitter.emit( event_string, new_event  );
 
             // console.log( event_string );
+            console.log( "typeof event "+typeof event );
+            console.log( "--event_string--"+event_string );
             console.log( "--once_event_string--"+once_event_string );
         });
     }
@@ -70,19 +73,20 @@ class PendingEventEmitter{
     }
 }
 
-let pee = new PendingEventEmitter();
+// let pee = new PendingEventEmitter();
 
-pee.on( {"t":"t"}, (data)=>{
-    console.log("test recieved");
-    console.log(data);
-    pee.emit_done( data.uuid );
-} )
+// pee.on( {"t":"t"}, (data)=>{
+//     console.log("test recieved");
+//     console.log(data);
+//     pee.emit_done( data.uuid );
+// } )
 
-pee.emit( {"t":"t"} )
-.then((data)=>{
-    console.log("finaly done");
-});
+// pee.emit( {"t":"t"} )
+// .then((data)=>{
+//     console.log("finaly done");
+// });
+
+const pending_event_emitter = new PendingEventEmitter()
 
 
-
-export default PendingEventEmitter
+export {PendingEventEmitter, pending_event_emitter}

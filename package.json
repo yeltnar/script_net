@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^10.11.3"
+    "@types/node": "^10.11.3",
+    "config": "^2.0.1",
+    "isomorphic-ws": "^4.0.1"
   }
 }

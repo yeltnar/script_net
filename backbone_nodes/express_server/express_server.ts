@@ -1,11 +1,13 @@
 import sortObject from "../../sortObject"
-import PendingEventEmitter from "../PendingEventEmitter/PendingEventEmitter"
+import {PendingEventEmitter} from "../PendingEventEmitter/PendingEventEmitter"
 
 const express = require('express');
 
 // TODO re think 
 // const EventEmitter = require('events');
 // const ee = new EventEmitter();
+
+const config = require("config");
 
 class ExpressServer{
 
@@ -20,12 +22,22 @@ class ExpressServer{
         start()
         .then( this.createExpressApp )
         .then( this.addExpressEndpoints )
-        .then( this.startExpressListening );
+        .then( this.startExpressListening )
+        .catch((e)=>{
+            console.error(e);
+        });
     }
 
-    protected async createExpressApp(){
+    protected createExpressApp=async ()=>{
+
+        const port = config.port || 3000;// TODO remove fallback
+
+        if( port===undefined ){
+            throw new Error("no port defined");
+        }
+
         this.app = express();
-        this.app.set("port", 3000); // TODO move to config
+        this.app.set("port", port); // TODO move to config
         this.app.use((req, res, next)=>{
             console.log("request for: '"+req.url+"'");
             next()
@@ -33,13 +45,14 @@ class ExpressServer{
         return this.app;
     }
 
-    protected async addExpressEndpoints( app ){
+    protected addExpressEndpoints=async ( app )=>{
 
         const single_regex_string = "(\\w+=.*)";
 
-        async function regexCallback(req, res){
+        const regexCallback=async(req, res)=>{
 
             const regex_test:RegExp = req.route.path; // TODO make sure this typing is working or find a way to add commented out block 
+            
             // if( !regex_test instanceof RegExp ){
             // 	let err = new Error("regexCallback used but not with regex");
             // 	res.status(500).json(err);
@@ -48,7 +61,7 @@ class ExpressServer{
         
             const regex_res_arr = regex_test.exec(req.url) ;
         
-            let obj = {};
+            let obj:any = {};
             
             regex_res_arr.forEach((cur, i, arr)=>{
         
@@ -59,14 +72,18 @@ class ExpressServer{
                     obj[ cur_arr[0] ] = cur_arr[1];
                 }
             });
+
+            const {event, parser_name, device_name, group_name, token } = obj
+
+            // plucked obj contains the keys that I want to be part of the event
+            let plucked_obj = {event, parser_name, device_name, group_name, token };
             
-            obj = sortObject( obj );
-            const json = JSON.stringify(obj);
+            plucked_obj = sortObject( plucked_obj );
         
             // TODO wait for reply from emit then resolve it
-            ee.emit( json, obj );
-        
-            res.end( json );
+            this.pending_event_emitter.emit( plucked_obj, obj ).then(()=>{
+                this.sendHttpReply( res, obj);
+            });
         }
         
         // adds i+1 times _(let i=9 would be 10 times)_
@@ -77,6 +94,8 @@ class ExpressServer{
             for( let j=0; j<i+1; j++ ){
                 r_str += "/"+single_regex_string;
             }
+
+            r_str +="\/?(.*)";
         
             const r = new RegExp( r_str );
         
@@ -86,7 +105,15 @@ class ExpressServer{
         return app;
     }
 
-    protected async startExpressListening( app ){
+    protected sendHttpReply=( res, contents )=>{
+        if( typeof contents === "object" ){
+            res.json(contents);
+        }else{
+            res.end(contents);
+        }
+    }
+
+    protected startExpressListening=async( app )=>{
         this.server = app.listen(app.get('port'),()=>{
             console.log("listening on port "+app.get('port'));
         });
@@ -96,8 +123,14 @@ class ExpressServer{
 
 export default ExpressServer
 
-// TODO move the next part to another file
-    
+// start promise for formatting 
+async function start(){
+    return;
+}
+
+
+/*
+// TODO move the next part to another file  
 interface FilterObj{
     filter_name:string,
     values:Array<string>
@@ -185,8 +218,5 @@ class WSConnector {
 
 })();
 
-// start promise for formatting 
-async function start(){
-    return;
-}
 
+*/
