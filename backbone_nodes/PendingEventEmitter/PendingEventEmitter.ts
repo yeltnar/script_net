@@ -41,6 +41,8 @@ class PendingEventEmitter{
             this.event_emitter.on( once_event_string, ( data )=>{resolve(data);});
 
             const new_event  = sortObject({ uuid, ...event }); // uuid is first so it will be covered up by event's uuid if it is there
+            console.log("new_event")
+            console.log(new_event)
             const event_string = JSON.stringify( event );
             this.event_emitter.emit( event_string, new_event  );
 
@@ -53,11 +55,13 @@ class PendingEventEmitter{
 
     emit_done=( uuid:string ):void=>{
 
-        const event = {state:"DONE", uuid};
+        const event = sortObject({state:"DONE", uuid});
         const event_str = JSON.stringify(event);
         this.event_emitter.emit( event_str, event );
 
         console.log( "++emit_done++"+event_str );
+        
+        return event;
     }
 
     on=( event:object, callback:Function ):Promise<any>=>{

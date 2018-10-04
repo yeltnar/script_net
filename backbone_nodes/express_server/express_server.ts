@@ -15,16 +15,24 @@ class ExpressServer{
     app; // instance of express 
     pending_event_emitter:PendingEventEmitter;
 
+    startPromise:Promise<void>;
+
     constructor( pending_event_emitter:PendingEventEmitter ){
 
         this.pending_event_emitter = pending_event_emitter;
 
-        start()
-        .then( this.createExpressApp )
-        .then( this.addExpressEndpoints )
-        .then( this.startExpressListening )
-        .catch((e)=>{
-            console.error(e);
+        this.startPromise = new Promise((resolve, reject)=>{
+            start()
+            .then( this.createExpressApp )
+            .then( this.addExpressEndpoints )
+            .then( this.startExpressListening )
+            .then(()=>{
+                resolve();
+            })
+            .catch((e)=>{
+                console.error(e);
+                reject();
+            });
         });
     }
 
@@ -73,17 +81,47 @@ class ExpressServer{
                 }
             });
 
-            const {event, parser_name, device_name, group_name, token } = obj
+            const {event, parser_name, device_name, group_name, token, server_token, status, uuid } = obj
 
             // plucked obj contains the keys that I want to be part of the event
-            let plucked_obj = {event, parser_name, device_name, group_name, token };
+            let plucked_obj = {event, parser_name, device_name, group_name, token, server_token, status };
+
+
+            // TODO actually check server_token 
+            if( server_token!==undefined && this.checkServerToken(server_token) ){
+
+                // assume trying to resolve pending request
+                if( uuid!==undefined ){
+
+                    console.log("GOT UUID IN EXPRESS REQUEST");
+
+                    let done_obj = this.pending_event_emitter.emit_done( uuid );
+                    this.sendHttpReply( res, done_obj );
+
+                }else{
+                    console.log("!!!")
+                
+                    plucked_obj =  sortObject( plucked_obj );
+                
+                    // TODO wait for reply from emit then resolve it
+                    this.pending_event_emitter.emit( plucked_obj, obj ).then(()=>{
+                        this.sendHttpReply( res, obj );
+                    });
+                }
+
+            }else{
+
+                const options = {
+                    status:401
+                };
+                
+                // didn't check out
+                const err = "server token didn't check out";
+
+                console.log({err});
+                this.sendHttpReply( res, {err}, options);
+            }
             
-            plucked_obj = sortObject( plucked_obj );
-        
-            // TODO wait for reply from emit then resolve it
-            this.pending_event_emitter.emit( plucked_obj, obj ).then(()=>{
-                this.sendHttpReply( res, obj);
-            });
         }
         
         // adds i+1 times _(let i=9 would be 10 times)_
@@ -105,7 +143,22 @@ class ExpressServer{
         return app;
     }
 
-    protected sendHttpReply=( res, contents )=>{
+    protected startExpressListening=async( app )=>{
+        this.server = app.listen(app.get('port'),()=>{
+            console.log("listening on port "+app.get('port'));
+        });
+    }
+
+    protected sendHttpReply=( res, contents, options?:{ status?:number } )=>{
+
+        if( options!==undefined ){
+            if( options.status ){
+                res.status(options.status);
+            }
+        }
+
+        console.log("contents")
+        console.log(contents)
         if( typeof contents === "object" ){
             res.json(contents);
         }else{
@@ -113,10 +166,10 @@ class ExpressServer{
         }
     }
 
-    protected startExpressListening=async( app )=>{
-        this.server = app.listen(app.get('port'),()=>{
-            console.log("listening on port "+app.get('port'));
-        });
+    protected checkServerToken=( incoming_token:string ):boolean=>{
+        // TODO fix this function 
+        console.log("not checking token "+incoming_token);
+        return true;
     }
 
 }

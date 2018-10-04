@@ -5,7 +5,11 @@ import {PendingEventEmitter, pending_event_emitter} from "./PendingEventEmitter/
 const config = require("config");
 
 const express_server = new ExpressServer( pending_event_emitter );
-const ws_server =  new WsServer(pending_event_emitter, express_server.server);
+let ws_server;
+express_server.startPromise.then(()=>{
+    ws_server =  new WsServer(pending_event_emitter, express_server.server);
+})
+
 
 // process.on('unhandledRejection', (reason, promise) => {
 //     console.log();
@@ -21,7 +25,8 @@ pending_event_emitter.on( {event:"e.e.e"}, (data)=>{
         pending_event_emitter.emit_done( data.uuid );
         console.log("resolved "+data.uuid);
     }else{
-        console.log("data.uuid is "+data.uuid);
+        console.error("ERROR: data is "+JSON.stringify(data));
+        console.error("ERROR: data.uuid is "+data.uuid);
     }
     
 });
