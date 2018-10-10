@@ -1,5 +1,5 @@
-import sortObject from "../../sortObject"
-import {PendingEventEmitter} from "../PendingEventEmitter/PendingEventEmitter"
+import sortObject from "../../sortObject";
+import {PendingEventEmitter} from "../../lib/PendingEventEmitter/PendingEventEmitter";
 
 const express = require('express');
 
@@ -11,9 +11,11 @@ const config = require("config");
 
 class ExpressServer{
 
-    server; // http server from the express app
-    app; // instance of express 
+    server:any; // http server from the express app
+    app:any; // instance of express 
     pending_event_emitter:PendingEventEmitter;
+
+    sub_route:string;
 
     startPromise:Promise<void>;
 
@@ -21,10 +23,17 @@ class ExpressServer{
 
         this.pending_event_emitter = pending_event_emitter;
 
+        this.sub_route = "/v1";
+
         this.startPromise = new Promise((resolve, reject)=>{
             start()
             .then( this.createExpressApp )
-            .then( this.addExpressEndpoints )
+            .then( this.construct_createExpressRouter(this.sub_route) )
+
+            .then( this.addExpressRegexEndpoints )
+            .then( this.addExpressFallbackEndpoint ) // This must be last for routes
+
+            .then( this.getExpressApp ) 
             .then( this.startExpressListening )
             .then(()=>{
                 resolve();
@@ -34,6 +43,13 @@ class ExpressServer{
                 reject();
             });
         });
+
+        this.startPromise.then(()=>{
+            this.app.all("*",(req:any, res:any)=>{
+                res.status(400).json({err:"no endpoint triggered"})
+            });
+        })
+        
     }
 
     protected createExpressApp=async ()=>{
@@ -46,18 +62,35 @@ class ExpressServer{
 
         this.app = express();
         this.app.set("port", port); // TODO move to config
-        this.app.use((req, res, next)=>{
+        this.app.use((req:any, res:any, next:any)=>{
             console.log("request for: '"+req.url+"'");
-            next()
+            next();
         })
         return this.app;
     }
 
-    protected addExpressEndpoints=async ( app )=>{
+    protected construct_createExpressRouter=(sub_route:any)=>{
+
+        const createExpressRouter=async(app:any)=>{
+
+            const router = express.Router();
+    
+            app.use(sub_route, router);
+            console.log("created sub router-'"+sub_route+"'");
+    
+            return router;
+        }
+
+        return createExpressRouter;
+    }
+
+    protected addExpressRegexEndpoints=async ( incoming_router:any )=>{
+
+        const router = express.Router();
 
         const single_regex_string = "(\\w+=.*)";
 
-        const regexCallback=async(req, res)=>{
+        const regexCallback=async(req:any, res:any)=>{
 
             const regex_test:RegExp = req.route.path; // TODO make sure this typing is working or find a way to add commented out block 
             
@@ -84,7 +117,7 @@ class ExpressServer{
             const {event, parser_name, device_name, group_name, token, server_token, status, uuid } = obj
 
             // plucked obj contains the keys that I want to be part of the event
-            let plucked_obj = {event, parser_name, device_name, group_name, token, server_token, status };
+            let plucked_obj = {event, parser_name, device_name, group_name, token, status };
 
 
             // TODO actually check server_token 
@@ -126,30 +159,50 @@ class ExpressServer{
         
         // adds i+1 times _(let i=9 would be 10 times)_
         // this is the max number of variables that can be passed into the url
-        for(let i=9; i>=0; i--){
-            let r_str = "v1"
+        for(let i=100; i>=0; i--){
+            let r_str = ""
         
             for( let j=0; j<i+1; j++ ){
                 r_str += "/"+single_regex_string;
             }
 
-            r_str +="\/?(.*)";
+            //r_str +="\/?(.*)";
         
             const r = new RegExp( r_str );
         
-            app.all( r, regexCallback );
+            router.all( r, regexCallback );
+            //console.log("r_str /ee"+r_str)
         }
 
-        return app;
+        //app.use(router);
+        incoming_router.use("/ee", router);
+
+        // app.use("/ee/*", (req, res)=>{
+        //     res.end("ee")
+        // })
+
+        return incoming_router;
     }
 
-    protected startExpressListening=async( app )=>{
+    protected addExpressFallbackEndpoint=async ( incoming_router:any )=>{
+        incoming_router.all((req:any, res:any)=>{
+            res.status(500).json({err:"no route found"});
+        });
+        return incoming_router;
+    }
+
+    protected startExpressListening=async( app:any )=>{
+        app = this.app
         this.server = app.listen(app.get('port'),()=>{
             console.log("listening on port "+app.get('port'));
         });
     }
 
-    protected sendHttpReply=( res, contents, options?:{ status?:number } )=>{
+    protected getExpressApp=()=>{
+        return this.app;
+    }
+
+    protected sendHttpReply=( res:any, contents:any, options?:{ status?:number } )=>{
 
         if( options!==undefined ){
             if( options.status ){
@@ -157,8 +210,6 @@ class ExpressServer{
             }
         }
 
-        console.log("contents")
-        console.log(contents)
         if( typeof contents === "object" ){
             res.json(contents);
         }else{

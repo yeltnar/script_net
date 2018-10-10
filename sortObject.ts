@@ -1,13 +1,13 @@
-function sortObject( obj ){
+function sortObject( obj:any ){
 
 	if( typeof obj === "object" && !Array.isArray(obj) ){
 
-        const newObj = {};
+        const newObj:any = {};
         const obj_keys = Object.keys(obj).sort();
 
         for(let i=0; i<obj_keys.length; i++){
 
-            let cur_key = obj_keys[i];
+            let cur_key:any = obj_keys[i];
 
             newObj[cur_key] = sortObject( obj[cur_key] );
 

@@ -4,36 +4,32 @@ enum Status{
     ERROR = "ERROR", // request has encountered an error 
 }
 
-// generic message to be sent anywhere 
-interface WsMessage{
-    
+enum WsEventType{
+    HTTP = "HTTP", // message coming from express
+    PLAIN = "PLAIN", // message coming from inside the app 
+    INFO = "INFO", // info message (prob won't be acted on)
+    //INIT = "INIT", // message from a client initalizing itself  // TODO remove? this is handled by the connection request
+    ADD_EVENT = "ADD_EVENT" // add event string to be listened for 
 }
 
-interface HttpMessage extends WsMessage{
-    request:object,
-    url:string,
-    query_body:object
-}
-
-interface MessageResult{
-    
-}
-
-interface HttpMessageResult extends MessageResult {
-    status:number,
+interface EventObj {
+    event:string,
+    parser_name?:string,
+    device_name?:string,
+    group_name?:string,
+    parser_token?:string
 }
 
 interface WsEvent{
-    uuid:string,
-    type: WsEventType,
-    status:Status,
-    target?:{ // optional target information 
-        parser?:string,
-        device?:string,
-        group?:string,
-    },
-    message:WsMessage,
-    result?:MessageResult // need to check for this before send back
+    event_obj:EventObj,
+    type:WsEventType,
+    data?:any,
+    // force_live_data:boolean, // force_live_data and allow_caching need to be thought through
+    // allow_caching:boolean, // force_live_data and allow_caching need to be thought through
 }
 
-export default WsEvent
+interface WsAddEvent extends WsEvent{   
+    WsAddEvent_testParam:string
+}
+
+export {WsEvent,WsEventType,EventObj,WsAddEvent}
