@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "test": "ts-node app.ts"
+    "test": "clear; ts-node test.ts"
   },
   "repository": {
     "type": "git",

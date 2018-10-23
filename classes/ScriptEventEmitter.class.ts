@@ -1,11 +1,40 @@
 import {setUpWebsocket} from "./WsClient"
-import {EventContainer, checkEventContainer} from "../interfaces/script_loader.interface"
+import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
+import { EventEmitter } from "events";
 
-class ScriptEventEmitter extends PendingEventEmitter{
+class ScriptEventEmitter {
+
 
     constructor( script_net_ws_server_obj:ScriptNetServerObj ){
-        super();
+
+        const eventEmitter = new EventEmitter();
+
+        this.emit = eventEmitter.emit;
+        this.on = eventEmitter.on;
+
         const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj} );
+
+        this._sendToWsServer = ws_client.send
+    }
+
+    // this is replaced by the event emitter version     
+    // function only to be called by ws (or another valid source) 
+    private emit=( event: string|symbol, ...args:any[] )=>{}
+
+    // this is replaced by the event emitter version 
+    // function to listen to ws events
+    public on=( event:string | symbol, listener )=>{}
+
+    // this is replaced by the ws version 
+    private _sendToWsServer=( s:string )=>{}
+
+    // this is sent into the ws to be emitted on the cloud
+    public emitToCloud=( cloud_event_container:CloudEventContainer )=>{
+        checkCloudEventContainer( cloud_event_container );
+
+        const data_str = JSON.stringify(cloud_event_container)
+
+        this._sendToWsServer( data_str );
     }
 
     private bindToWebSocket( {ws_client, script_net_ws_server_obj}:{ws_client?, script_net_ws_server_obj?} ){
@@ -31,12 +60,7 @@ class ScriptEventEmitter extends PendingEventEmitter{
     }
 }
 
-export default {ScriptEventEmitter}
-
-new ScriptEventEmitter({
-    protocol:"wss",
-    address:"ws-expose.mybluemix.net"
-});
+export {ScriptEventEmitter}
 
 // local interfaces 
 interface ScriptNetServerObj{
