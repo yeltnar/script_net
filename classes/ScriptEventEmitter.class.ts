@@ -1,4 +1,3 @@
-import {PendingEventEmitter} from "./PendingEventEmitter"
 import {setUpWebsocket} from "./WsClient"
 import {EventContainer, checkEventContainer} from "../interfaces/script_loader.interface"
 
