@@ -1,0 +1,145 @@
+enum WsEventType{
+    HTTP = "HTTP", // message coming from express
+    PLAIN = "PLAIN", // message coming from inside the app 
+    INFO = "INFO", // info message (prob won't be acted on)
+    //INIT = "INIT", // message from a client initalizing itself  // TODO remove? this is handled by the connection request
+    ADD_EVENT = "ADD_EVENT", // add event string to be listened for 
+    DONE = "DONE",
+    ERROR = "ERROR"
+}
+
+// registers an attached device 
+interface ScriptLoader {
+    // version of filter that will be sending on to connected client ... need good versioning here
+
+    "filter_version":string, 
+
+    "script_name":string,
+    "device_name":string,
+    "group_name":string,
+    
+    // list of events to try to match with
+    "cloud_event_string_list":[string],
+
+    // list of events to send in ws { "event_name":"string", "data":{} }
+    "local_event_table":[
+        {
+            "cloud_event_string":string,   // brodcast cloud event to be watching for
+            "required_keys_table":[RequiredKeysElement], // checks the EventContainer.event.data contents 
+            "script_event_string":string, // check out LocalWsEventContainer... the event_name is this exact field 
+        }
+    ], 
+
+    // express events should send the simplified request object with the event to the cloud event emitter
+    "express_event_table"?:[
+        {
+
+            express_string:string, //"/test123",
+            event_string:string, //"TEST_123",
+            resolve_event_string:string //"TEST_123-${uuid}" // this must have ${uuid} in order to resolve the pending request 
+            // do I need the previous one or is uuid enough?
+        }
+    ]
+}
+
+// list of keys (and optional values) that need to be there for the event to continue
+interface RequiredKeysElement{
+    "key":string,
+    "value"?:string, // either value or required_keys_table should be present if neither then only check its presence
+    "required_keys_table"?:RequiredKeysElement // either value or required_keys_table should be present if neither then only check its presence
+}
+
+// event object that can be sent to ws or other event emitter applications
+interface EventContainer{
+    event_name:string,
+    event:{
+        event_type:WsEventType,
+        uuid:string,
+        data:any
+    }
+}
+
+interface CloudEventContainer extends EventContainer{
+    device_meata_data:{
+        script_name?:string,
+        device_name?:string,
+        group_name?:string,
+    }
+}
+
+// express response interface TODO
+
+function checkEventContainer( ec:EventContainer ):boolean{
+
+    const check = ec.event_name!==undefined 
+        && ec.event!==undefined 
+        && ec.event.data!==undefined 
+        && ec.event.event_type!==undefined 
+        && ec.event.uuid!==undefined;
+
+    if( check===true ){
+        return check;
+    }else{
+        throw new Error("checkEventContainer test failed!");
+    }
+}
+
+function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
+    let check = checkEventContainer( cec )
+        && cec.device_meata_data!==undefined
+
+    if( check===true ){ 
+        return check;
+    }else{
+        throw new Error("checkCloudEventContainer test failed!");
+    }
+}
+
+export {WsEventType, ScriptLoader, RequiredKeysElement, EventContainer, CloudEventContainer, checkEventContainer, checkCloudEventContainer}
+
+let script_loader_example:ScriptLoader = {
+
+    filter_version:"0",
+
+    device_name:"test_device",
+    group_name:"test_group",
+    script_name:"test_script",
+    
+    cloud_event_string_list:[
+        "TEST_123"
+    ],
+
+    
+    local_event_table:[
+        {
+            // when TEST_123 happens and the keys match fire 123_TEST on ws connection 
+            cloud_event_string:"TEST_123",
+            required_keys_table:[
+                {
+                    key:"body"
+                }
+            ],
+            script_event_string:"123_TEST"
+        }
+    ]
+};
+
+//example event
+let example_event:EventContainer = {
+    event_name:"test123",
+    event:{
+        event_type:WsEventType.PLAIN,
+        uuid:"1111111111",
+        data:{}
+    }
+}
+
+//example resolve event
+let example_resolve_event:EventContainer = {
+    event_name:"1111111111", // event_name and uuid should be the same in a resolving event
+    event:{
+        event_type:WsEventType.DONE,
+        uuid:"1111111111", // event_name and uuid should be the same in a resolving event
+        data:{}
+    }
+};

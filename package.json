@@ -2,16 +2,23 @@
   "name": "script_net",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ts-node app.ts"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeltnar/script_net.git"
+  },
+  "author": "Andrew Brantley",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yeltnar/script_net/issues"
+  },
+  "homepage": "https://github.com/yeltnar/script_net#readme",
   "dependencies": {
     "@types/node": "^10.11.3",
     "config": "^2.0.1",
-    "isomorphic-ws": "^4.0.1",
-    "ws": "^6.0.0"
+    "isomorphic-ws": "^4.0.1"
   }
 }

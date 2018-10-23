@@ -1,38 +1,46 @@
 const EventEmitter = require("events");
 const uuid_v4 = require('uuid/v4');
 
-import {EventObj, WsEvent}  from "../../Interfaces/EventInterfaces/WsEvent.interface";
-import sortObject from "../../sortObject"
-import { emit } from "cluster";
+import sortObject from "../sortObject"
 
 class PendingEventEmitter{
 
     // instance of EventEmitter these are stubs so ts knows what can be done
-    private locical_event_emitter={ 
+    private event_emitter={ 
         emit:(event:string, data:any)=>{},
         on:(event:string, funct:Function)=>{},
         once:(event:string, funct:Function)=>{
             console.error("!!!!!!!!")
         },
-        eventNames:()=>{}
+        eventNames:()=>{},
+
     }; 
 
-    actual_event_emitter={ 
-        emit:(event:string, data:any)=>{},
-        on:(event:string, funct:Function)=>{},
-        once:(event:string, funct:Function)=>{
-            console.error("!!!!!!!!")
-        },
-        eventNames:()=>{}
-    }
-
     constructor(){
-        this.actual_event_emitter = new EventEmitter();
+        this.event_emitter = new EventEmitter();
 
     }
 
-    emit=( event_obj:WsEvent )=>{
+    public emit( event_obj, data ){
+
+        throw new Error("emit not ready...event_obj type removed");
+
+        console.log( "this.event_emitter.eventNames()" );
+        console.log( this.event_emitter.eventNames() );
+
+        if( data===undefined ){
+            console.error(new Error("data must be defined or null"));
+        }
+
         return new Promise((resolve, reject)=>{
+
+            console.log("PendingEventEmitter broadcast");
+            console.log( "Object.keys(event_obj)" );
+            console.log( Object.keys(event_obj) );
+
+            if( Object.keys(event_obj).indexOf( "event_obj" ) >= 0 ){
+                console.error(new Error("event_obj is a WsEvent"))
+            }
 
             if( typeof event_obj!=="object" ){
                 const err_str = "event must be an object";
@@ -51,31 +59,31 @@ class PendingEventEmitter{
 
             const once_event = {state:"DONE", uuid}; // TODO use interface?
             const once_event_string = JSON.stringify(once_event);
-            this.locical_event_emitter.on( once_event_string, ( data )=>{resolve(data);});
+            this.event_emitter.on( once_event_string, ( data )=>{resolve(data);});
 
             const new_event  = sortObject({ uuid, ...event_obj }); // uuid is first so it will be covered up by event's uuid if it is there
             const event_string = JSON.stringify( event_obj );
             
-            this.locical_event_emitter.emit( event_string, new_event  );
+            this.event_emitter.emit( event_string, new_event  );
 
             // console.log( event_string );
-            console.log( "--event_string--"+event_string );
-            console.log( "--once_event_string--"+once_event_string );
+            console.log( "--event_string received--"+event_string );
+            console.log( "--once_event_string registering--"+once_event_string );
         });
     }
 
-    emit_done=( uuid:string ):void=>{
+    emit_done=( uuid:string, event_str:string ):void=>{
 
-        const event = sortObject({state:"DONE", uuid});
-        const event_str = JSON.stringify(event);
-        this.locical_event_emitter.emit( event_str, event );
-
-        console.log( "++emit_done++"+event_str );
-        
-        return event;
+        throw new Error("emit_done not ready");
     }
 
-    on=( event:EventObj, callback:Function ):Promise<any>=>{
+    on=( event, callback:Function ):Promise<any>=>{
+
+        throw new Error("on not ready...event type removed")
+
+        console.log("event "+JSON.stringify(event));
+        console.log("adding listener for "+event);
+        console.log("typeof event "+typeof event);
 
         return new Promise((resolve, reject)=>{
 
@@ -87,7 +95,10 @@ class PendingEventEmitter{
                 event_str = event;
             }
 
-            this.locical_event_emitter.on( event_str, callback );
+            //console.log("--adding--'"+JSON.stringify(cur)+"' "+typeof cur);
+            console.log("--adding...--"+event_str)
+
+            this.event_emitter.on( event_str, callback );
 
             resolve();
         });
