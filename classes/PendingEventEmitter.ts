@@ -77,46 +77,10 @@ class PendingEventEmitter{
         throw new Error("emit_done not ready");
     }
 
-    on=( event, callback:Function ):Promise<any>=>{
-
-        throw new Error("on not ready...event type removed")
-
-        console.log("event "+JSON.stringify(event));
-        console.log("adding listener for "+event);
-        console.log("typeof event "+typeof event);
-
-        return new Promise((resolve, reject)=>{
-
-            let event_str;
-            if( typeof event==="object" ){
-                event = sortObject(event); // TODO remove this from others
-                event_str = JSON.stringify(event);
-            }else{
-                event_str = event;
-            }
-
-            //console.log("--adding--'"+JSON.stringify(cur)+"' "+typeof cur);
-            console.log("--adding...--"+event_str)
-
-            this.event_emitter.on( event_str, callback );
-
-            resolve();
-        });
+    on=( event, callback:Function )=>{
+        this.event_emitter.on( event, callback );
     }
 }
-
-// let pee = new PendingEventEmitter();
-
-// pee.on( {"t":"t"}, (data)=>{
-//     console.log("test recieved");
-//     console.log(data);
-//     pee.emit_done( data.uuid );
-// } )
-
-// pee.emit( {"t":"t"} )
-// .then((data)=>{
-//     console.log("finaly done");
-// });
 
 const pending_event_emitter = new PendingEventEmitter()
 
