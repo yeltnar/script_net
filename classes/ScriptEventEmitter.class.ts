@@ -1,19 +1,20 @@
 import {setUpWebsocket} from "./WsClient"
 import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
 import { EventEmitter } from "events";
+import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
 
 const uuid_v4 = require('uuid/v4');
 
 class ScriptEventEmitter {
 
-    constructor( script_net_ws_server_obj:ScriptNetServerObj ){
+    constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj ){
 
         const eventEmitter = new EventEmitter();
 
         this.emit = eventEmitter.emit;
         this.on = eventEmitter.on;
 
-        const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj} );
+        const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj} );
 
         this._sendToWsServer = ws_client.send
     }
@@ -27,12 +28,12 @@ class ScriptEventEmitter {
         this._sendToWsServer( data_str );
     }
 
-    private bindToWebSocket( {ws_client, script_net_ws_server_obj}:{ws_client?, script_net_ws_server_obj?} ){
+    private bindToWebSocket( {ws_client, script_net_ws_server_obj, script_net_ws_client_obj}:{ws_client?, script_net_ws_server_obj?, script_net_ws_client_obj} ){
 
         if( ws_client ){
             ws_client = ws_client;
         }else if( script_net_ws_server_obj ){
-            ws_client = setUpWebsocket( script_net_ws_server_obj );
+            ws_client = setUpWebsocket( script_net_ws_server_obj, script_net_ws_client_obj );
         }
 
         ws_client.on("message", this.ws_message)
@@ -65,9 +66,3 @@ class ScriptEventEmitter {
 }
 
 export {ScriptEventEmitter, uuid_v4}
-
-// local interfaces 
-interface ScriptNetServerObj{
-    protocol: "ws" | "wss",
-    address:string
-}

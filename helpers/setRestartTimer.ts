@@ -1,25 +1,35 @@
 function setRestartTimer( timeoutFunct:Function, ms:number ):{resetRestartTimer, clearRestartTimer}{
 
-    console.log("setRestartTimer "+ms)
-
-    const timeout_id = setTimeout(()=>{ 
-        clearRestartTimer();
-        console.log("timeout met");
+    const timeout = setTimeout(()=>{ 
+        // console.log("timeout met "+(timeout));
+        // console.log((timeout));
         timeoutFunct();
     }, ms);
 
-    const clearRestartTimer = ()=>{
-        console.log("clearRestartTimer");
-        clearInterval(timeout_id);
+    let local_clearRestartTimer = ()=>{
+        // console.log((timeout));
+        clearTimeout( timeout );
     };
 
-    const resetRestartTimer = ()=>{
-        console.log("resetRestartTimer");
-        clearInterval(timeout_id);
-        setRestartTimer( timeoutFunct, ms );
+    let local_resetRestartTimer = ()=>{
+        // console.log((timeout));
+        clearTimeout( timeout );
+
+        const {clearRestartTimer,resetRestartTimer} = setRestartTimer( timeoutFunct, ms );
+        
+        local_clearRestartTimer = clearRestartTimer;;
+        local_resetRestartTimer = resetRestartTimer;;
     }
 
-    return {resetRestartTimer, clearRestartTimer};
+    // have to do it like this so the refrences don't need changing after setRestartTimer is called 
+    return {
+        clearRestartTimer:()=>{
+            local_clearRestartTimer();
+        },
+        resetRestartTimer:()=>{
+            local_resetRestartTimer();
+        } 
+    };
 }
 
 module.exports = setRestartTimer;
