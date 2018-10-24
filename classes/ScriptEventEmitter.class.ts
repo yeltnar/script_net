@@ -2,8 +2,9 @@ import {setUpWebsocket} from "./WsClient"
 import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
 import { EventEmitter } from "events";
 
-class ScriptEventEmitter {
+const uuid_v4 = require('uuid/v4');
 
+class ScriptEventEmitter {
 
     constructor( script_net_ws_server_obj:ScriptNetServerObj ){
 
@@ -16,17 +17,6 @@ class ScriptEventEmitter {
 
         this._sendToWsServer = ws_client.send
     }
-
-    // this is replaced by the event emitter version     
-    // function only to be called by ws (or another valid source) 
-    private emit=( event: string|symbol, ...args:any[] )=>{}
-
-    // this is replaced by the event emitter version 
-    // function to listen to ws events
-    public on=( event:string | symbol, listener )=>{}
-
-    // this is replaced by the ws version 
-    private _sendToWsServer=( s:string )=>{}
 
     // this is sent into the ws to be emitted on the cloud
     public emitToCloud=( cloud_event_container:CloudEventContainer )=>{
@@ -58,9 +48,23 @@ class ScriptEventEmitter {
         this.emit( event_container.event_name, event_container );
 
     }
+
+    /******* start of stub functions *******/
+    // these will be replaced by core functions
+
+    // this is replaced by the event emitter version     
+    // function only to be called by ws (or another valid source) 
+    private emit=( event: string|symbol, ...args:any[] )=>{}
+
+    // this is replaced by the event emitter version 
+    // function to listen to ws events
+    public on=( event:string|symbol, listener )=>{}
+
+    // this is replaced by the ws version... no need for code in this function
+    private _sendToWsServer=( s:string )=>{}
 }
 
-export {ScriptEventEmitter}
+export {ScriptEventEmitter, uuid_v4}
 
 // local interfaces 
 interface ScriptNetServerObj{

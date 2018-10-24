@@ -1,7 +1,9 @@
 const WebSocket = require("isomorphic-ws");
 
-import {PendingEventEmitter} from "./PendingEventEmitter"
 import {CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
+
+//const MAX_PING_INTERVAL = 1000 * 60 * 5;
+const MAX_PING_INTERVAL = 1000 * 5;
 
 // local interfaces 
 interface ScriptNetServerObj{
@@ -15,8 +17,10 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj ){
 
     const ws = new WebSocket( ws_final_url );
 
+    const {resetRestartTimer, clearRestartTimer} = setRestartTimer(()=>{ ws.close(); }, MAX_PING_INTERVAL)
+
     ws.on("open", ()=>{
-        console.log("ws connection open")
+        console.log("connected "+ws_final_url+" "+(new Date().toString()));
     });
 
     ws.on("message", ( msg )=>{
@@ -24,18 +28,54 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj ){
     })
 
     ws.on("error", (error)=>{
-        console.log(`ws.on("error", )`)
-        console.log(error)
+        console.log(`ws.on("error", )`);
+        console.log(error);
+
+        console.warn("NEED TO MAKE SURE THIS DOES NOT SET UP TWO CONNECTIONS TO THE SERVER WITH THE WS.ON CLOSE");
+
+        ws.close();
+        setUpWebsocket( scriptnet_server_obj );
+        clearRestartTimer();
     })
 
-    const sendObj=( obj:CloudEventContainer )=>{
+    ws.on('close', () => {
 
-        checkCloudEventContainer( obj );
+        console.log("disconnected "+ws_final_url+" "+(new Date().toString()));
 
-        ws.send( JSON.stringify(obj) );
-    }
+        setTimeout(()=>{ setUpWebsocket( scriptnet_server_obj );}, 1000)
+        clearRestartTimer();
+    });
+
+    ws.on('ping',async (data)=>{
+        console.log("ping: "+data.toString());
+        resetRestartTimer();
+    })
 
     return ws;
 }
 
-export {setUpWebsocket} ;
+export {setUpWebsocket};
+
+function setRestartTimer( timeoutFunct:Function, ms:number ):{resetRestartTimer, clearRestartTimer}{
+
+    console.log("setRestartTimer "+ms)
+
+    const timeout_id = setTimeout(()=>{ 
+        clearRestartTimer();
+        console.log("timeout met");
+        timeoutFunct();
+    }, ms);
+
+    const clearRestartTimer = ()=>{
+        console.log("clearRestartTimer");
+        clearInterval(timeout_id);
+    };
+
+    const resetRestartTimer = ()=>{
+        console.log("resetRestartTimer");
+        clearInterval(timeout_id);
+        setRestartTimer( timeoutFunct, ms );
+    }
+
+    return {resetRestartTimer, clearRestartTimer};
+}
