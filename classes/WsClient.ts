@@ -1,7 +1,7 @@
 const WebSocket = require("isomorphic-ws");
 const setRestartTimer = require("../helpers/setRestartTimer");
 
-import {CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
+import {CloudEventContainer, checkCloudEventContainer, WsEventType} from "../interfaces/script_loader.interface"
 import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
 import {timeout}  from "../shared_files/ping_timeout"
 
@@ -11,17 +11,11 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
 
     const ws_final_url = scriptnet_server_obj.protocol+"://"+scriptnet_server_obj.address+getQueryParams(script_net_client_obj);
 
-    console.log({ws_final_url})
-
     const ws = new WebSocket( ws_final_url );
-
-    const {resetRestartTimer, clearRestartTimer} = setRestartTimer(()=>{ 
-        console.warn("Ping not received...closing ws connection");
-        ws.close(); 
-    }, MAX_PING_INTERVAL)
 
     ws.on("open", ()=>{
         console.log("connected "+ws_final_url+" "+(new Date().toString()));
+
     });
 
     ws.on("message", ( msg )=>{
@@ -52,6 +46,11 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
         console.log("ping: "+data.toString());
         resetRestartTimer();
     })
+
+    const {resetRestartTimer, clearRestartTimer} = setRestartTimer(()=>{ 
+        console.warn("Ping not received...closing ws connection");
+        ws.close(); 
+    }, MAX_PING_INTERVAL)
 
     return ws;
 }

@@ -60,7 +60,7 @@ interface EventContainer{
 }
 
 interface CloudEventContainer extends EventContainer{
-    device_meata_data:{
+    device_meta_data:{
         script_name?:string,
         device_name?:string,
         group_name?:string,
@@ -86,7 +86,7 @@ function checkEventContainer( ec:EventContainer ):boolean{
 
 function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     let check = checkEventContainer( cec )
-        && cec.device_meata_data!==undefined
+        && cec.device_meta_data!==undefined
 
     if( check===true ){ 
         return check;

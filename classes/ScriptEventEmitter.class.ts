@@ -16,7 +16,9 @@ class ScriptEventEmitter {
 
         const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj} );
 
-        this._sendToWsServer = ws_client.send
+        this._sendToWsServer = ( data_str )=>{
+            ws_client.send( data_str );
+        }
     }
 
     // this is sent into the ws to be emitted on the cloud

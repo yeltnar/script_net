@@ -1,4 +1,6 @@
 import {timeout as MAX_PING_INTERVAL}  from "../../shared_files/ping_timeout";
+import {CloudEventContainer, checkCloudEventContainer, WsEventType} from "../../interfaces/script_loader.interface"
+import {filterAndSend} from "./filterAndSend"
 
 const WebSocket = require('ws');
 const url = require('url');
@@ -22,7 +24,10 @@ class WsServer{
         wss.on('connection', (ws, request)=>{
             console.log("new connection");
 
+            this.setUpClient(ws, request);
+
             this.setupKeepAlivePing( ws );
+            this.handelConnection(ws, request);
         });
     
         console.log("wsInit done");
@@ -58,6 +63,13 @@ class WsServer{
 
     }
 
+    setUpClient(ws, req){
+
+        const queryData = url.parse(req.url, true).query
+        const {parser_name,device_name,group_name,parser_token} = queryData;
+        ws.device_meta_data = {parser_name,device_name,group_name,parser_token};
+    }
+
     private setupKeepAlivePing( ws ){
 
         ws.isAlive = true;
@@ -85,6 +97,26 @@ class WsServer{
 
         }, MAX_PING_INTERVAL);
 
+    }
+
+    private handelConnection=(ws, req)=>{
+        ws.on("message", ( data:CloudEventContainer )=>{
+            data = typeof data==="string" ? JSON.parse(data) : data; // make sure we have an instance of EventContainer
+            checkCloudEventContainer(data);
+
+            if( data.event.event_type===WsEventType.ADD_EVENT ){
+                // add event
+            //}else if( data.event.event_type===WsEventType.DONE ){
+            }else if( data.event.event_type===WsEventType.DONE ){
+                // go through resolve process 
+            }else if( data.event.event_type===WsEventType.HTTP ){
+                
+                filterAndSend(ws, data)
+            }else if( data.event.event_type===WsEventType.PLAIN ){
+                
+                filterAndSend(ws, data)
+            }
+        })
     }
 }
 
