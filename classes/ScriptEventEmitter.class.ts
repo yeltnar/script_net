@@ -1,11 +1,24 @@
 import {setUpWebsocket} from "./WsClient"
-import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
+import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer, LocalEventEntry, AddEventContainer, WsEventType} from "../interfaces/script_loader.interface"
 import { EventEmitter } from "events";
 import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
 
 const uuid_v4 = require('uuid/v4');
 
+const RESOLVE_EVENT_NAME = "RESOLVE_EVENT";
+const MAX_PENDING_TIME = 20000; // time in ms
+
 class ScriptEventEmitter {
+
+    registered_cloud_events:[LocalEventEntry] = [
+        {
+            cloud_event_string:"connection-test-event",
+            required_keys_table:null,
+            script_event_string:"connection-test-event",
+        }
+    ];
+
+    private eventEmitter;
 
     constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj ){
 
@@ -14,16 +27,87 @@ class ScriptEventEmitter {
         this.emit = eventEmitter.emit;
         this.on = eventEmitter.on;
 
+        this.eventEmitter = eventEmitter;
+
         const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj} );
 
-        this._sendToWsServer = ws_client.send
+        this._sendToWsServer = ( data_str )=>{
+            ws_client.send( data_str );
+        }
+
+        ws_client.on("open", this.addRegisteredEvents);
+
+        //this.ws_client = ws_client;
     }
 
     // this is sent into the ws to be emitted on the cloud
-    public emitToCloud=( cloud_event_container:CloudEventContainer )=>{
-        checkCloudEventContainer( cloud_event_container );
+    public emitToCloudPromise = ( cloud_event_container:CloudEventContainer|AddEventContainer ):Promise<any>=>{
+
+        let promise_is_resolved = false;
+
+        return new Promise((resolve, reject)=>{
+
+            this.emitToCloud( cloud_event_container );
+
+            this.on( RESOLVE_EVENT_NAME, function once( data:EventContainer ){
+
+                if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
+
+                if( cloud_event_container.event.uuid===data.event.uuid ){
+
+                    resolve( data );
+                    promise_is_resolved = true;
+                    this.eventEmitter.removeListener( RESOLVE_EVENT_NAME, once );
+
+                }
+
+            });
+
+            setTimeout(()=>{
+
+                if( !promise_is_resolved ){
+                    console.error("emitToCloud err 68 - "+JSON.stringify(cloud_event_container))
+                    reject({err:"timeout"});
+                }
+
+            }, MAX_PENDING_TIME);
+
+        }).catch((err)=>{
+            
+            console.error("emitToCloud err 71")
+            console.error(err)
+        });
+    }
+
+    public emitToCloud( cloud_event_container:CloudEventContainer|AddEventContainer ){
+
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
 
         const data_str = JSON.stringify(cloud_event_container)
+
+        this._sendToWsServer( data_str );
+
+    }
+
+    // this is sent into the ws to be emitted on the cloud
+    public resolveToCloud=( uuid:string, data )=>{
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
+
+        
+
+        const cloud_event:CloudEventContainer = {
+            device_meta_data:null,
+            event_name:RESOLVE_EVENT_NAME,
+            event:{
+                event_type:WsEventType.DONE,
+                uuid,
+                data
+            }
+        };
+
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
+
+        const data_str = JSON.stringify(cloud_event)
 
         this._sendToWsServer( data_str );
     }
@@ -63,6 +147,30 @@ class ScriptEventEmitter {
 
     // this is replaced by the ws version... no need for code in this function
     private _sendToWsServer=( s:string )=>{}
+
+    private addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
+
+        const to_emit_to_cloud:AddEventContainer = {
+            event_name:"ADD_CLOUD_EVENT",
+            event:{
+                event_type:WsEventType.ADD_ONCE_EVENT,
+                uuid:uuid_v4(),
+                data:local_event_entry
+            }
+        };
+
+        this.emitToCloud( to_emit_to_cloud );
+    }
+
+    private addRegisteredEvents=()=>{
+
+        this.registered_cloud_events.forEach(( cur_local_event_entry:LocalEventEntry, i, arr )=>{
+
+            this.addRegisteredEvent( cur_local_event_entry );
+        });
+    }   
+
+
 }
 
 export {ScriptEventEmitter, uuid_v4}

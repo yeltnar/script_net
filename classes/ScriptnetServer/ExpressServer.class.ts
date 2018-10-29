@@ -9,7 +9,7 @@ class ExpressServer{
 
     sub_route_str = "/v1";
 
-    constructor(){
+    constructor(cloud_event_emitter){
 
         this.startPromise = new Promise((resolve, reject)=>{
             start()

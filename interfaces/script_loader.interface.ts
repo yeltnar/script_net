@@ -4,6 +4,7 @@ enum WsEventType{
     INFO = "INFO", // info message (prob won't be acted on)
     //INIT = "INIT", // message from a client initalizing itself  // TODO remove? this is handled by the connection request
     ADD_EVENT = "ADD_EVENT", // add event string to be listened for 
+    ADD_ONCE_EVENT = "ADD_ONCE_EVENT", // add event string to be listened for 
     DONE = "DONE",
     ERROR = "ERROR"
 }
@@ -12,28 +13,21 @@ enum WsEventType{
 interface ScriptLoader {
     // version of filter that will be sending on to connected client ... need good versioning here
 
-    "filter_version":string, 
+    filter_version:string, 
 
-    "script_name":string,
-    "device_name":string,
-    "group_name":string,
+    script_name:string,
+    device_name:string,
+    group_name:string,
     
     // list of events to try to match with
-    "cloud_event_string_list":[string],
+    cloud_event_string_list:[string],
 
     // list of events to send in ws { "event_name":"string", "data":{} }
-    "local_event_table":[
-        {
-            "cloud_event_string":string,   // brodcast cloud event to be watching for
-            "required_keys_table":[RequiredKeysElement], // checks the EventContainer.event.data contents 
-            "script_event_string":string, // check out LocalWsEventContainer... the event_name is this exact field 
-        }
-    ], 
+    local_event_table:[LocalEventEntry], 
 
     // express events should send the simplified request object with the event to the cloud event emitter
-    "express_event_table"?:[
+    express_event_table?:[
         {
-
             express_string:string, //"/test123",
             event_string:string, //"TEST_123",
             resolve_event_string:string //"TEST_123-${uuid}" // this must have ${uuid} in order to resolve the pending request 
@@ -41,6 +35,12 @@ interface ScriptLoader {
         }
     ]
 }
+interface LocalEventEntry{
+    cloud_event_string:string,   // brodcast cloud event to be watching for
+    required_keys_table:[RequiredKeysElement], // checks the EventContainer.event.data contents 
+    script_event_string:string, // check out LocalWsEventContainer... the event_name is this exact field 
+}
+
 
 // list of keys (and optional values) that need to be there for the event to continue
 interface RequiredKeysElement{
@@ -60,10 +60,18 @@ interface EventContainer{
 }
 
 interface CloudEventContainer extends EventContainer{
-    device_meata_data:{
+    device_meta_data:{
         script_name?:string,
         device_name?:string,
         group_name?:string,
+    }
+}
+
+interface AddEventContainer extends EventContainer{
+    event:{
+        event_type:WsEventType.ADD_EVENT|WsEventType.ADD_ONCE_EVENT,
+        uuid:string,
+        data:LocalEventEntry
     }
 }
 
@@ -86,7 +94,7 @@ function checkEventContainer( ec:EventContainer ):boolean{
 
 function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     let check = checkEventContainer( cec )
-        && cec.device_meata_data!==undefined
+        && cec.device_meta_data!==undefined
 
     if( check===true ){ 
         return check;
@@ -95,7 +103,7 @@ function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     }
 }
 
-export {WsEventType, ScriptLoader, RequiredKeysElement, EventContainer, CloudEventContainer, checkEventContainer, checkCloudEventContainer}
+export {WsEventType, ScriptLoader, RequiredKeysElement, EventContainer, CloudEventContainer, checkEventContainer, checkCloudEventContainer, AddEventContainer, LocalEventEntry}
 
 let script_loader_example:ScriptLoader = {
 
