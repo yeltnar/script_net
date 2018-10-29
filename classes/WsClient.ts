@@ -1,23 +1,24 @@
 const WebSocket = require("isomorphic-ws");
+const setRestartTimer = require("../helpers/setRestartTimer");
 
 import {CloudEventContainer, checkCloudEventContainer} from "../interfaces/script_loader.interface"
+import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
+import {timeout}  from "../shared_files/ping_timeout"
 
-//const MAX_PING_INTERVAL = 1000 * 60 * 5;
-const MAX_PING_INTERVAL = 1000 * 5;
+const MAX_PING_INTERVAL = timeout*2;
 
-// local interfaces 
-interface ScriptNetServerObj{
-    protocol: "ws" | "wss",
-    address:string
-}
+function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_client_obj:ScriptNetClientObj ){
 
-function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj ){
+    const ws_final_url = scriptnet_server_obj.protocol+"://"+scriptnet_server_obj.address+getQueryParams(script_net_client_obj);
 
-    const ws_final_url = scriptnet_server_obj.protocol+"://"+scriptnet_server_obj.address;
+    console.log({ws_final_url})
 
     const ws = new WebSocket( ws_final_url );
 
-    const {resetRestartTimer, clearRestartTimer} = setRestartTimer(()=>{ ws.close(); }, MAX_PING_INTERVAL)
+    const {resetRestartTimer, clearRestartTimer} = setRestartTimer(()=>{ 
+        console.warn("Ping not received...closing ws connection");
+        ws.close(); 
+    }, MAX_PING_INTERVAL)
 
     ws.on("open", ()=>{
         console.log("connected "+ws_final_url+" "+(new Date().toString()));
@@ -31,18 +32,19 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj ){
         console.log(`ws.on("error", )`);
         console.log(error);
 
-        console.warn("NEED TO MAKE SURE THIS DOES NOT SET UP TWO CONNECTIONS TO THE SERVER WITH THE WS.ON CLOSE");
+        // console.warn("NEED TO MAKE SURE THIS DOES NOT SET UP TWO CONNECTIONS TO THE SERVER WITH THE WS.ON CLOSE");
 
         ws.close();
-        setUpWebsocket( scriptnet_server_obj );
-        clearRestartTimer();
+        // setUpWebsocket( scriptnet_server_obj, script_net_client_obj );
+        // clearRestartTimer();
     })
 
     ws.on('close', () => {
 
         console.log("disconnected "+ws_final_url+" "+(new Date().toString()));
 
-        setTimeout(()=>{ setUpWebsocket( scriptnet_server_obj );}, 1000)
+        setTimeout(()=>{ setUpWebsocket( scriptnet_server_obj, script_net_client_obj );}, 1000)
+        console.log("ws closed...clearRestartTimer")
         clearRestartTimer();
     });
 
@@ -54,28 +56,19 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj ){
     return ws;
 }
 
-export {setUpWebsocket};
+function getQueryParams( script_net_client_obj:ScriptNetClientObj ){
 
-function setRestartTimer( timeoutFunct:Function, ms:number ):{resetRestartTimer, clearRestartTimer}{
+    let param_str = "/";
 
-    console.log("setRestartTimer "+ms)
+    for( let k in script_net_client_obj ){
+        param_str += param_str==="/" ? "?" : "&";
 
-    const timeout_id = setTimeout(()=>{ 
-        clearRestartTimer();
-        console.log("timeout met");
-        timeoutFunct();
-    }, ms);
-
-    const clearRestartTimer = ()=>{
-        console.log("clearRestartTimer");
-        clearInterval(timeout_id);
-    };
-
-    const resetRestartTimer = ()=>{
-        console.log("resetRestartTimer");
-        clearInterval(timeout_id);
-        setRestartTimer( timeoutFunct, ms );
+        param_str += k;
+        param_str += "=";
+        param_str += script_net_client_obj[k];
     }
 
-    return {resetRestartTimer, clearRestartTimer};
+    return param_str;
 }
+
+export {setUpWebsocket};
