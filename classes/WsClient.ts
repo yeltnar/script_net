@@ -19,7 +19,7 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
     });
 
     ws.on("message", ( msg )=>{
-        console.log("WsClient.class "+JSON.stringify(msg));
+        console.log("WsClient.class log "+(msg));
     })
 
     ws.on("error", (error)=>{
@@ -42,7 +42,7 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
         clearRestartTimer();
     });
 
-    ws.on('ping',async (data)=>{
+    ws.on('ping', async (data)=>{
         console.log("ping: "+data.toString());
         resetRestartTimer();
     })
