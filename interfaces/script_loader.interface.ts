@@ -9,6 +9,10 @@ enum WsEventType{
     ERROR = "ERROR"
 }
 
+enum  EventStrings{
+    RESOLVE_EVENT_NAME = "RESOLVE_EVENT"
+}
+
 // registers an attached device 
 interface ScriptLoader {
     // version of filter that will be sending on to connected client ... need good versioning here
@@ -103,7 +107,18 @@ function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     }
 }
 
-export {WsEventType, ScriptLoader, RequiredKeysElement, EventContainer, CloudEventContainer, checkEventContainer, checkCloudEventContainer, AddEventContainer, LocalEventEntry}
+export {
+    WsEventType, 
+    ScriptLoader, 
+    RequiredKeysElement, 
+    EventContainer, 
+    CloudEventContainer, 
+    checkEventContainer, 
+    checkCloudEventContainer, 
+    AddEventContainer, 
+    LocalEventEntry, 
+    EventStrings
+}
 
 let script_loader_example:ScriptLoader = {
 

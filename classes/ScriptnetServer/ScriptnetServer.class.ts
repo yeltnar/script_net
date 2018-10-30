@@ -6,7 +6,7 @@ const EventEmitter = require("events");
 class ScriptnetServer {
 
     express_server;
-    ws_server;
+    ws_server:WsServer;
 
     constructor(){
         const cloud_event_emitter = new EventEmitter();

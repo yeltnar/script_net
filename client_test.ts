@@ -13,32 +13,32 @@ const script_event_emitter = new ScriptEventEmitter({
     parser_token:"parser_token"
 });
 
-script_event_emitter.on( "connection-test-event", (data:CloudEventContainer)=>{
-    // console.log("connection-test-event message received: "+new Date());
-    // console.log("connection-test-event message received: "+JSON.stringify(data));
-    // console.log("device_meta_data: "+JSON.stringify(data.device_meta_data));
-    // console.log("event: "+JSON.stringify(data.event));
-    // console.log("event_name: "+(data.event_name));
 
-    let time_ms = (new Date()).getTime();
+script_event_emitter.on_smart( "connection-test-event", async( data:CloudEventContainer )=>{
 
-    script_event_emitter.resolveToCloud( data.event.uuid, {worked:"worked", time_ms} );
+    // console.log("\ndata");
+    // console.log(data);
+
+    const time_ms = (new Date()).getTime();
+
+    return {time_ms}
+    
 });
-
-
-// TODO remove
-let event:CloudEventContainer = {
-    event_name:"connection-test-event",
-    device_meta_data:{
-        //device_name:"device_name"
-    },
-    event:{
-        event_type:WsEventType.PLAIN,
-        uuid:"1234567890",
-        data:null
-    }
-};
 setTimeout(()=>{
+
+
+    // TODO remove
+    let event:CloudEventContainer = {
+        event_name:"connection-test-event",
+        device_meta_data:{
+            //device_name:"device_name"
+        },
+        event:{
+            event_type:WsEventType.PLAIN,
+            uuid:"1234567890",
+            data:null
+        }
+    };
 
     let start = (new Date()).getTime();
 
