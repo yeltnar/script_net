@@ -1,12 +1,16 @@
 import {setUpWebsocket} from "./WsClient"
-import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer, LocalEventEntry, AddEventContainer, WsEventType} from "../interfaces/script_loader.interface"
+import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer, LocalEventEntry, AddEventContainer, WsEventType, EventStrings} from "../interfaces/script_loader.interface"
 import { EventEmitter } from "events";
 import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
 
 const uuid_v4 = require('uuid/v4');
 
-const RESOLVE_EVENT_NAME = "RESOLVE_EVENT";
+
 const MAX_PENDING_TIME = 20000; // time in ms
+
+interface EventEmitterCallback {
+    (data: CloudEventContainer): Promise<object>;
+}
 
 class ScriptEventEmitter {
 
@@ -20,7 +24,9 @@ class ScriptEventEmitter {
 
     private eventEmitter;
 
-    constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj ){
+    ws_client;
+
+    constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj, doneCallback? ){
 
         const eventEmitter = new EventEmitter();
 
@@ -35,9 +41,16 @@ class ScriptEventEmitter {
             ws_client.send( data_str );
         }
 
-        ws_client.on("open", this.addRegisteredEvents);
+        this.ws_client = ws_client;
 
-        //this.ws_client = ws_client;
+        ws_client.on("open", this.addRegisteredEvents);
+        ws_client.on("open", ()=>{
+            console.log(" is open ");
+        });
+        if( doneCallback!==undefined ){
+            ws_client.on("open", doneCallback);
+        }
+
     }
 
     // this is sent into the ws to be emitted on the cloud
@@ -49,33 +62,26 @@ class ScriptEventEmitter {
 
             this.emitToCloud( cloud_event_container );
 
-            this.on( RESOLVE_EVENT_NAME, function once( data:EventContainer ){
+            this.on( EventStrings.RESOLVE_EVENT, function once( data:EventContainer ){
 
                 if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
 
                 if( cloud_event_container.event.uuid===data.event.uuid ){
-
                     resolve( data );
                     promise_is_resolved = true;
-                    this.eventEmitter.removeListener( RESOLVE_EVENT_NAME, once );
-
+                    this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
                 }
-
             });
 
             setTimeout(()=>{
 
                 if( !promise_is_resolved ){
-                    console.error("emitToCloud err 68 - "+JSON.stringify(cloud_event_container))
+                    console.error("TIMEOUT ERR - "+JSON.stringify(cloud_event_container))
                     reject({err:"timeout"});
                 }
 
             }, MAX_PENDING_TIME);
 
-        }).catch((err)=>{
-            
-            console.error("emitToCloud err 71")
-            console.error(err)
         });
     }
 
@@ -97,7 +103,7 @@ class ScriptEventEmitter {
 
         const cloud_event:CloudEventContainer = {
             device_meta_data:null,
-            event_name:RESOLVE_EVENT_NAME,
+            event_name:EventStrings.RESOLVE_EVENT,
             event:{
                 event_type:WsEventType.DONE,
                 uuid,
@@ -133,6 +139,16 @@ class ScriptEventEmitter {
         this.emit( event_container.event_name, event_container );
 
     }
+    
+    // smart version of on
+    public on_smart=( event:string, f:EventEmitterCallback )=>{
+
+        this.on( event, async( data:CloudEventContainer )=>{
+            let f_result = await f( data );
+            this.resolveToCloud( data.event.uuid, f_result );
+        });
+
+    }
 
     /******* start of stub functions *******/
     // these will be replaced by core functions
@@ -148,7 +164,7 @@ class ScriptEventEmitter {
     // this is replaced by the ws version... no need for code in this function
     private _sendToWsServer=( s:string )=>{}
 
-    private addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
+    addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
 
         const to_emit_to_cloud:AddEventContainer = {
             event_name:"ADD_CLOUD_EVENT",

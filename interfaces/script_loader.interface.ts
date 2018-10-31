@@ -3,13 +3,25 @@ enum WsEventType{
     PLAIN = "PLAIN", // message coming from inside the app 
     INFO = "INFO", // info message (prob won't be acted on)
     //INIT = "INIT", // message from a client initalizing itself  // TODO remove? this is handled by the connection request
+    
     ADD_EVENT = "ADD_EVENT", // add event string to be listened for 
     ADD_ONCE_EVENT = "ADD_ONCE_EVENT", // add event string to be listened for 
+    
+    ADD_EXPRESS_ENDPOINT = "ADD_EXPRESS_ENDPOINT", // add event string to be listened for 
+    REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT", // add event string to be listened for 
+
     DONE = "DONE",
     ERROR = "ERROR"
 }
 
+enum  EventStrings{
+    RESOLVE_EVENT = "RESOLVE_EVENT",
+    ADD_EXPRESS_ENDPOINT = "ADD_EXPRESS_ENDPOINT",
+    REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT",
+}
+
 // registers an attached device 
+// this isn't used... the smaller types are more important 
 interface ScriptLoader {
     // version of filter that will be sending on to connected client ... need good versioning here
 
@@ -41,7 +53,6 @@ interface LocalEventEntry{
     script_event_string:string, // check out LocalWsEventContainer... the event_name is this exact field 
 }
 
-
 // list of keys (and optional values) that need to be there for the event to continue
 interface RequiredKeysElement{
     "key":string,
@@ -64,6 +75,11 @@ interface CloudEventContainer extends EventContainer{
         script_name?:string,
         device_name?:string,
         group_name?:string,
+    },
+    sender_device_meta_data?:{
+        script_name:string,
+        device_name:string,
+        group_name:string,
     }
 }
 
@@ -72,6 +88,39 @@ interface AddEventContainer extends EventContainer{
         event_type:WsEventType.ADD_EVENT|WsEventType.ADD_ONCE_EVENT,
         uuid:string,
         data:LocalEventEntry
+    }
+}
+
+interface AddExpressEndpointContainer extends CloudEventContainer{
+    event:{
+        event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
+        uuid:string,
+        data:{
+            router_name:string,
+            express_string:string,
+            http_method:"GET"|"POST"|"DELETE"|"ALL",
+            cloud_event_string:string,
+            allow_keep_router_name?:boolean
+        }
+    }
+}
+
+interface RemoveExpressRouterContainer extends CloudEventContainer{
+    event:{
+        event_type:WsEventType.REMOVE_EXPRESS_ENDPOINT,
+        uuid:string,
+        data:{
+            router_name:string
+        }
+    },
+    event_name:EventStrings.REMOVE_EXPRESS_ENDPOINT
+}
+
+interface ExpressReplyContainer extends CloudEventContainer{
+    event:{
+        event_type:WsEventType.DONE,
+        uuid:string,
+        data:any // TODO make this the modified request obj
     }
 }
 
@@ -103,7 +152,21 @@ function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     }
 }
 
-export {WsEventType, ScriptLoader, RequiredKeysElement, EventContainer, CloudEventContainer, checkEventContainer, checkCloudEventContainer, AddEventContainer, LocalEventEntry}
+export {
+    WsEventType, 
+    ScriptLoader, 
+    RequiredKeysElement, 
+    EventContainer, 
+    CloudEventContainer, 
+    checkEventContainer, 
+    checkCloudEventContainer, 
+    AddEventContainer, 
+    LocalEventEntry, 
+    EventStrings,
+    AddExpressEndpointContainer,
+    RemoveExpressRouterContainer,
+    ExpressReplyContainer,
+}
 
 let script_loader_example:ScriptLoader = {
 
