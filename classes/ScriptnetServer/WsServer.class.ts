@@ -1,21 +1,22 @@
 import {timeout as MAX_PING_INTERVAL}  from "../../shared_files/ping_timeout";
-import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer} from "../../interfaces/script_loader.interface"
+import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
 import {filter} from "./filter"
 import {checkRequiredKeys} from "./checkRequiredKeys"
+import { uuid_v4 } from "../ScriptEventEmitter.class";
 
 const WebSocket = require('ws');
 const url = require('url');
-
-const RESOLVE_EVENT_NAME = "RESOLVE_EVENT";
 
 class WsServer{
 
     wss; // instance of web socket server
     cloud_event_emitter;
+    express_app;
 
-    constructor( server, cloud_event_emitter ){
+    constructor( server, cloud_event_emitter, express_app ){
 
         this.cloud_event_emitter = cloud_event_emitter;
+        this.express_app = express_app;
 
         this.wsInit( server );
     }
@@ -28,7 +29,7 @@ class WsServer{
         this.wss = wss;
     
         wss.on('connection', (ws, request)=>{
-            console.log("new connection");
+            console.log("new connection ");
 
             this.setUpClient(ws, request);
 
@@ -71,23 +72,69 @@ class WsServer{
 
     setUpClient(ws, req){
 
+        this.setUpParallelClient(  );
+
         const queryData = url.parse(req.url, true).query
         const {parser_name,device_name,group_name,parser_token} = queryData;
         ws.device_meta_data = {parser_name,device_name,group_name,parser_token};
+        console.log(ws.device_meta_data);
 
-        this.cloud_event_emitter.on(RESOLVE_EVENT_NAME, ( cloud_event_container:CloudEventContainer )=>{
-            filter(ws, [], cloud_event_container, RESOLVE_EVENT_NAME)
+        this.cloud_event_emitter.on(EventStrings.RESOLVE_EVENT, ( cloud_event_container:CloudEventContainer )=>{
+            filter(ws, [], cloud_event_container, EventStrings.RESOLVE_EVENT)
             .catch((err)=>{
                 console.error(err);
             }).then(( data )=>{
 
                 // resolve undefined data if shouldn't send
                 if( data!==undefined ){
-                    ws.send( JSON.stringify(data) );
+                    if( ws.readyState === 1 ){
+                        ws.send( JSON.stringify(data) );
+                    }else{
+                        const {device_meta_data} = ws
+                        console.log( `not sending to ws(${JSON.stringify(device_meta_data)})... ready state is ${ws.readyState}` );
+                    }
                 }
                 
             });
         });
+
+        ws.on("close", ()=>{
+
+            // if( ws.express_endpoint_list ){
+            //     ws.express_endpoint_list.forEach((cur, i, arr) => {
+
+            //         this.cloud_event_emitter.emit( EventStrings.REMOVE_EXPRESS_ENDPOINT,  );
+
+            //     });
+            // }
+
+            // ws.
+
+            const default_router_name:string = ws.device_meta_data.script_name + ws.device_meta_data.device_name + ws.device_meta_data.group_name;
+
+            const data:RemoveExpressRouterContainer = {
+                event:{
+                    event_type:WsEventType.REMOVE_EXPRESS_ENDPOINT,
+                    uuid:uuid_v4(),
+                    data:{
+                        router_name:default_router_name
+                    }
+                },
+                event_name:EventStrings.REMOVE_EXPRESS_ENDPOINT,
+                device_meta_data:{}
+            };
+
+            this.cloud_event_emitter.emit( data.event_name, data );
+
+            console.log("closing "+JSON.stringify(ws.device_meta_data))
+            
+            //throw "need to remove express endpoints";
+
+        })
+    }
+
+    setUpParallelClient(){
+
     }
 
     private setupKeepAlivePing( ws ){
@@ -107,9 +154,10 @@ class WsServer{
                 ws.isAlive = false;
 
                 const date = (new Date()).toString();
+                const {device_meta_data} = ws;
 
                 if( ws.readyState===1  ){
-                    ws.ping( JSON.stringify({date}) );
+                    ws.ping( JSON.stringify({date, ...device_meta_data}) );
                 }else{
                     console.error("WS IS CLOSED BUT WE ARE TRYING TO PING");
                 }
@@ -120,10 +168,18 @@ class WsServer{
     }
 
     private handelConnection=(ws, req)=>{
+
         ws.on("message", ( data:CloudEventContainer )=>{
             data = typeof data==="string" ? JSON.parse(data) : data; // make sure we have an instance of EventContainer
 
             console.log("got message "+JSON.stringify(data));
+
+            data.sender_device_meta_data = {
+                
+                script_name: ws.device_meta_data.parser_name,
+                device_name: ws.device_meta_data.device_name,
+                group_name: ws.device_meta_data.group_name,
+            };
 
             if( data.event.event_type===WsEventType.ADD_EVENT ){
 
@@ -187,14 +243,19 @@ class WsServer{
                 checkCloudEventContainer(data);
                 console.log("WsEventType.HTTP "+JSON.stringify(data));
                 this.cloud_event_emitter.emit( data.event_name, data );
-            }else if( data.event.event_type===WsEventType.PLAIN ){ 
+
+            }else if( data.event.event_type===WsEventType.PLAIN || data.event.event_type===WsEventType.ADD_EXPRESS_ENDPOINT ){ 
 
                 checkCloudEventContainer(data);
                 console.log("WsEventType.PLAIN "+JSON.stringify(data));
-                console.log("WsEventType.PLAIN "+data.event);
+                console.log("WsEventType.PLAIN "+data.event_name);
                 this.cloud_event_emitter.emit( data.event_name, data );
             }
         })
+    }
+
+    pullOutRequestData=( req )=>{
+        return req;
     }
 }
 

@@ -24,7 +24,9 @@ class ScriptEventEmitter {
 
     private eventEmitter;
 
-    constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj ){
+    ws_client;
+
+    constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj, doneCallback? ){
 
         const eventEmitter = new EventEmitter();
 
@@ -39,9 +41,16 @@ class ScriptEventEmitter {
             ws_client.send( data_str );
         }
 
-        ws_client.on("open", this.addRegisteredEvents);
+        this.ws_client = ws_client;
 
-        //this.ws_client = ws_client;
+        ws_client.on("open", this.addRegisteredEvents);
+        ws_client.on("open", ()=>{
+            console.log(" is open ");
+        });
+        if( doneCallback!==undefined ){
+            ws_client.on("open", doneCallback);
+        }
+
     }
 
     // this is sent into the ws to be emitted on the cloud
@@ -53,14 +62,14 @@ class ScriptEventEmitter {
 
             this.emitToCloud( cloud_event_container );
 
-            this.on( EventStrings.RESOLVE_EVENT_NAME, function once( data:EventContainer ){
+            this.on( EventStrings.RESOLVE_EVENT, function once( data:EventContainer ){
 
                 if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
 
                 if( cloud_event_container.event.uuid===data.event.uuid ){
                     resolve( data );
                     promise_is_resolved = true;
-                    this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT_NAME, once );
+                    this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
                 }
             });
 
@@ -94,7 +103,7 @@ class ScriptEventEmitter {
 
         const cloud_event:CloudEventContainer = {
             device_meta_data:null,
-            event_name:EventStrings.RESOLVE_EVENT_NAME,
+            event_name:EventStrings.RESOLVE_EVENT,
             event:{
                 event_type:WsEventType.DONE,
                 uuid,
@@ -155,7 +164,7 @@ class ScriptEventEmitter {
     // this is replaced by the ws version... no need for code in this function
     private _sendToWsServer=( s:string )=>{}
 
-    private addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
+    addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
 
         const to_emit_to_cloud:AddEventContainer = {
             event_name:"ADD_CLOUD_EVENT",
