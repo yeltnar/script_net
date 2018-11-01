@@ -66,6 +66,13 @@ class ExpressServer{
                 res.end("cleared")
             });
 
+            this.app.get("/routes", (req, res, next)=>{
+
+                let toSend = JSON.stringify(req.app._router.stack);
+
+                res.end(toSend)
+            });
+
             console.log("added awake route");
 
 
