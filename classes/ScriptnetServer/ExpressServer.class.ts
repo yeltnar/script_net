@@ -52,7 +52,7 @@ class ExpressServer{
 
     private createExpressApp=async ()=>{
 
-        const port = this.port || 3000;// TODO remove fallback
+        const port = process.argv[2] || process.env.PORT || 3000;
 
         if( port===undefined ){
             throw new Error("no port defined");

@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
+  "engines": {
+    "node": "8.*"
+  },
   "scripts": {
-    "test": "clear; ts-node test.ts"
+    "test": "clear; ts-node test.ts",
+    "start": "ts-node scriptnet_server.ts",
+    "preinstall": "npm -v;node -v;npm i -g typescript; npm i -g ts-node;"
   },
   "repository": {
     "type": "git",
@@ -21,6 +26,7 @@
     "config": "^2.0.1",
     "express": "^4.16.4",
     "isomorphic-ws": "^4.0.1",
+    "uuid": "^3.3.2",
     "ws": "^6.1.0"
   }
 }
