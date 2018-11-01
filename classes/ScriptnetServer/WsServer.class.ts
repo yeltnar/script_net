@@ -72,6 +72,8 @@ class WsServer{
 
     setUpClient(ws, req){
 
+        ws.remove_event_arr = ws.remove_event_arr || [];
+
         this.setUpParallelClient(  );
 
         const queryData = url.parse(req.url, true).query
@@ -79,7 +81,7 @@ class WsServer{
         ws.device_meta_data = {parser_name,device_name,group_name,parser_token};
         console.log(ws.device_meta_data);
 
-        this.cloud_event_emitter.on(EventStrings.RESOLVE_EVENT, ( cloud_event_container:CloudEventContainer )=>{
+        const event_callback = ( cloud_event_container:CloudEventContainer )=>{
             filter(ws, [], cloud_event_container, EventStrings.RESOLVE_EVENT)
             .catch((err)=>{
                 console.error(err);
@@ -98,8 +100,13 @@ class WsServer{
                         console.log( `not sending to ws(${JSON.stringify(device_meta_data)})... ready state is ${ws.readyState}` );
                     }
                 }
-                
             });
+        };
+
+        this.cloud_event_emitter.on(EventStrings.RESOLVE_EVENT, event_callback);
+
+        ws.remove_event_arr.push(()=>{
+            this.cloud_event_emitter.removeListener(EventStrings.RESOLVE_EVENT, event_callback);
         });
 
         ws.on("close", ()=>{
