@@ -46,6 +46,13 @@ class ExpressServer{
             // this.app.all("*",(req:any, res:any)=>{
             //     res.status(400).json({err:"no endpoint triggered"})
             // });
+
+            this.app.get("/awake", (req, res, next)=>{
+                res.end("200")
+            });
+            console.log("added awake route");
+
+
         })
         
     }
