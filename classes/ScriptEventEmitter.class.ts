@@ -14,13 +14,7 @@ interface EventEmitterCallback {
 
 class ScriptEventEmitter {
 
-    registered_cloud_events:[LocalEventEntry] = [
-        {
-            cloud_event_string:"connection-test-event",
-            required_keys_table:null,
-            script_event_string:"connection-test-event",
-        }
-    ];
+    registered_cloud_events:Array<LocalEventEntry> = [];
 
     private eventEmitter;
 
@@ -175,7 +169,7 @@ class ScriptEventEmitter {
         const to_emit_to_cloud:AddEventContainer = {
             event_name:"ADD_CLOUD_EVENT",
             event:{
-                event_type:WsEventType.ADD_ONCE_EVENT,
+                event_type:WsEventType.ADD_EVENT,
                 uuid:uuid_v4(),
                 data:local_event_entry
             }

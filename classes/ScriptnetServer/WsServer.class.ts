@@ -104,16 +104,7 @@ class WsServer{
 
         ws.on("close", ()=>{
 
-            // if( ws.express_endpoint_list ){
-            //     ws.express_endpoint_list.forEach((cur, i, arr) => {
-
-            //         this.cloud_event_emitter.emit( EventStrings.REMOVE_EXPRESS_ENDPOINT,  );
-
-            //     });
-            // }
-
-            // ws.
-
+            // remove express routes
             const default_router_name:string = ws.device_meta_data.script_name + ws.device_meta_data.device_name + ws.device_meta_data.group_name;
 
             const data:RemoveExpressRouterContainer = {
@@ -130,11 +121,17 @@ class WsServer{
 
             this.cloud_event_emitter.emit( data.event_name, data );
 
-            console.log("closing "+JSON.stringify(ws.device_meta_data))
-            
-            //throw "need to remove express endpoints";
+            console.log("closing "+JSON.stringify(ws.device_meta_data));
 
-        })
+            if( ws.remove_event_arr ){
+                console.log("removing ws callback functions");
+                ws.remove_event_arr.forEach((cur)=>{
+                    cur();
+                });
+            }else{
+                console.log("ws.remove_event_arr not defined")
+            }
+        });
     }
 
     setUpParallelClient(){
@@ -187,13 +184,17 @@ class WsServer{
 
             if( data.event.event_type===WsEventType.ADD_EVENT ){
 
+                console.log()
+                console.log("added to ws.remove_event_arr")
+                console.log()
+
                 //checkAddEventContainer(data);// TODO make this work
                 
                 const add_event_data = <AddEventContainer> data;
 
                 const {cloud_event_string, required_keys_table, script_event_string} = add_event_data.event.data;
 
-                this.cloud_event_emitter.on( cloud_event_string, ( data:CloudEventContainer )=>{
+                const event_callback = ( data:CloudEventContainer )=>{
                     filter( ws, required_keys_table, data, script_event_string)
                     .catch((err)=>{
                         console.error(err);
@@ -205,7 +206,19 @@ class WsServer{
                         }
                         
                     });
+                }
+
+                this.cloud_event_emitter.on( cloud_event_string, event_callback);
+
+                ws.remove_event_arr = ws.remove_event_arr || [];
+
+                ws.remove_event_arr.push(()=>{
+                    this.cloud_event_emitter.removeListener( cloud_event_string, event_callback);
                 });
+
+                console.log()
+                console.log("added to ws.remove_event_arr")
+                console.log()
 
                 console.log("added new cloud event "+JSON.stringify({script_event_string,cloud_event_string}))
                 
@@ -217,7 +230,7 @@ class WsServer{
 
                 const {cloud_event_string, required_keys_table, script_event_string} = add_event_data.event.data;
 
-                this.cloud_event_emitter.once( cloud_event_string, ( data:CloudEventContainer )=>{
+                const event_callback = ( data:CloudEventContainer )=>{
                     filter( ws, required_keys_table, data, script_event_string)
                     .catch((err)=>{
                         console.error(err);
@@ -229,6 +242,14 @@ class WsServer{
                         }
                         
                     });
+                }
+
+                this.cloud_event_emitter.once( cloud_event_string, event_callback);
+
+                ws.remove_event_arr = ws.remove_event_arr || [];
+
+                ws.remove_event_arr.push(()=>{
+                    this.cloud_event_emitter.removeListener( cloud_event_string, event_callback);
                 });
 
                 console.log("added new WsEventType.ADD_ONCE_EVENT "+JSON.stringify({script_event_string,cloud_event_string}))
