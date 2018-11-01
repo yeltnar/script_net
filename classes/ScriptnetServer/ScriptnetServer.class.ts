@@ -17,7 +17,7 @@ class ScriptnetServer {
 
     script_net_ws_server_obj:ScriptNetServerObj = {
         protocol: "ws", // TODO fix this and use config
-        address:"127.0.0.1:3000" // I think this should stay at local host
+        address: process.env.BLUEMIX_REGION===undefined ? "127.0.0.1:3000" : "ws-expose.mybluemix.net" // I think this should stay at local host
     };
     script_net_ws_client_obj:ScriptNetClientObj = {
         parser_name:"cloud_express_server",
