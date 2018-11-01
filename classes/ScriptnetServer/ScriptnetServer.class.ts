@@ -16,7 +16,8 @@ class ScriptnetServer {
     script_event_emitter:ScriptEventEmitter;
 
     script_net_ws_server_obj:ScriptNetServerObj = {
-        protocol: "ws", // TODO fix this and use config
+        //protocol: "ws", // TODO fix this and use config
+        protocol: process.env.BLUEMIX_REGION===undefined ? "ws" : "wss", // I think this should stay at local host, // TODO fix this and use config
         address: process.env.BLUEMIX_REGION===undefined ? "127.0.0.1:3000" : "ws-expose.mybluemix.net" // I think this should stay at local host
     };
     script_net_ws_client_obj:ScriptNetClientObj = {
@@ -40,9 +41,13 @@ class ScriptnetServer {
         })
 
         this.express_server.startPromise.then(()=>{
+            console.log("express server started");
             const httpServer = this.express_server.getHttpServer()
+            console.log("making new ws server");
             this.ws_server = new WsServer(httpServer, this.cloud_event_emitter, this.express_server.app);
+            console.log("after make new ws server");
             this.ws_server.wss.on("listening", ()=>{
+                console.log("ws server started")
                 this.connectToWsServer();
                 if( doneCallback!==undefined ){
                     doneCallback();

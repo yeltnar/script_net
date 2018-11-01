@@ -49,6 +49,7 @@ class ScriptEventEmitter {
         });
         if( doneCallback!==undefined ){
             ws_client.on("open", ()=>{
+                console.log("calling doneCallback...");
                 doneCallback(this);
             });
         }
