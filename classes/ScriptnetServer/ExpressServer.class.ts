@@ -48,7 +48,7 @@ class ExpressServer{
             // });
 
             this.app.get("/awake", (req, res, next)=>{
-                res.end("200")
+                res.end("200 "+JSON.stringify(process.env))
             });
             console.log("added awake route");
 
