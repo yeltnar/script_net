@@ -31,6 +31,18 @@ class WsServer{
         wss.on('connection', (ws, request)=>{
             console.log("new connection ");
 
+            const connect_msg:CloudEventContainer = {
+                device_meta_data:{},
+                event_name:EventStrings.GREET,
+                event:{
+                    event_type: WsEventType.INFO,
+                    uuid: uuid_v4(),
+                    data: null,
+                }
+            };
+
+            ws.send( JSON.stringify(connect_msg) );
+
             this.setUpClient(ws, request);
 
             this.setupKeepAlivePing( ws );
