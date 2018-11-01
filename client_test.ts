@@ -8,6 +8,10 @@ const scriptnet_server_obj:ScriptNetServerObj = {
     protocol:"ws",
     address:"127.0.0.1:3000"
 };
+// const scriptnet_server_obj:ScriptNetServerObj = {
+//     protocol:"wss",
+//     address:"ws-expose.mybluemix.net"
+// };
 
 const scriptnet_client_obj:ScriptNetClientObj = {
     parser_name:"http_test_parser",
