@@ -57,37 +57,43 @@ class ScriptnetServer {
     }
 
     connectToWsServer=()=>{
-        this.script_event_emitter = new ScriptEventEmitter( this.script_net_ws_server_obj, this.script_net_ws_client_obj);
+        
 
-        console.log("connectToWsServer...")
+        const timeout = process.env.BLUEMIX_REGION===undefined ? 0 : 1000*30; // delay if on bm
 
-        this.script_event_emitter.ws_client.on("error", ()=>{
-            console.log("ws_client.on error");
-        })
+        setTimeout(()=>{
+            this.script_event_emitter = new ScriptEventEmitter( this.script_net_ws_server_obj, this.script_net_ws_client_obj);
 
-        this.script_event_emitter.ws_client.on("open", ()=>{
+            console.log("connectToWsServer...")
 
-            console.log("connectToWsServer - open ")
+            this.script_event_emitter.ws_client.on("error", ()=>{
+                console.log("ws_client.on error");
+            })
 
-            //throw "need to know the router and ws refrence to add and remove"
-            //this.script_event_emitter.registered_cloud_events
-            this.script_event_emitter.addRegisteredEvent({
-                cloud_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
-                required_keys_table:null,
-                script_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
-            });
+            this.script_event_emitter.ws_client.on("open", ()=>{
 
-            this.script_event_emitter.addRegisteredEvent({
-                cloud_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
-                required_keys_table:null,
-                script_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
-            });
+                console.log("connectToWsServer - open ")
 
-            this.script_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, this.addExpressEndpoint);
-            this.script_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, this.removeExpressRouter);
+                //throw "need to know the router and ws refrence to add and remove"
+                //this.script_event_emitter.registered_cloud_events
+                this.script_event_emitter.addRegisteredEvent({
+                    cloud_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
+                    required_keys_table:null,
+                    script_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
+                });
 
-            console.log("sent AddExpressEndpointContainer");
-        })
+                this.script_event_emitter.addRegisteredEvent({
+                    cloud_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
+                    required_keys_table:null,
+                    script_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
+                });
+
+                this.script_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, this.addExpressEndpoint);
+                this.script_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, this.removeExpressRouter);
+
+                console.log("sent AddExpressEndpointContainer");
+            })
+        }, timeout)
 
     }
 
