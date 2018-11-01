@@ -11,6 +11,8 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
 
     const ws_final_url = scriptnet_server_obj.protocol+"://"+scriptnet_server_obj.address+getQueryParams(script_net_client_obj);
 
+    console.log("connecting to "+ws_final_url+" "+(new Date().toString()));
+
     const ws = new WebSocket( ws_final_url );
 
     ws.on("open", ()=>{
@@ -25,7 +27,7 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
     ws.on("error", (error)=>{
         console.log(`ws.on("error", )`);
         console.log({script_net_client_obj})
-        console.log(error);
+        console.log("error "+JSON.stringify(error));
 
         // console.warn("NEED TO MAKE SURE THIS DOES NOT SET UP TWO CONNECTIONS TO THE SERVER WITH THE WS.ON CLOSE");
 
