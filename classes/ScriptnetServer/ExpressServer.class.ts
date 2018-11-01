@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require('fs');
 
 import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer} from "../../interfaces/script_loader.interface"
 import { resolve } from "path";
@@ -50,6 +51,28 @@ class ExpressServer{
             this.app.get("/awake", (req, res, next)=>{
                 res.end("200 "+JSON.stringify(process.env)+" "+process.env.PORT+" end ")
             });
+
+            this.app.get("/log", (req, res, next)=>{
+                //res.sendFile( "./message.txt" );
+                let dir = process.argv[1]
+                dir = dir.split( "scriptnet_server.ts" )[0];
+                dir = dir+"message.txt";
+                console.log( dir )
+                res.sendFile( dir );
+            });
+
+            this.app.get("/clear_log", (req, res, next)=>{
+                fs.writeFileSync("./message.txt", "");
+                res.end("cleared")
+            });
+
+            this.app.get("/routes", (req, res, next)=>{
+
+                let toSend = JSON.stringify(req.app._router.stack);
+
+                res.end(toSend)
+            });
+
             console.log("added awake route");
 
 

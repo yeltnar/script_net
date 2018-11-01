@@ -2,12 +2,15 @@ import {ScriptEventEmitter, uuid_v4} from "./classes/ScriptEventEmitter.class"
 import {CloudEventContainer, WsEventType, AddExpressEndpointContainer} from "./interfaces/script_loader.interface"
 import {ScriptNetServerObj, ScriptNetClientObj} from "./interfaces/ScriptnetObj.interface"
 
-
-
 const scriptnet_server_obj:ScriptNetServerObj = {
     protocol:"ws",
     address:"127.0.0.1:3000"
 };
+
+// const scriptnet_server_obj:ScriptNetServerObj = {
+//     protocol:"wss",
+//     address:"ws-expose.mybluemix.net"
+// };
 
 const scriptnet_client_obj:ScriptNetClientObj = {
     parser_name:"http_test_parser",
@@ -17,7 +20,6 @@ const scriptnet_client_obj:ScriptNetClientObj = {
 };
 
 const script_event_emitter = new ScriptEventEmitter(scriptnet_server_obj,scriptnet_client_obj, doneCallback);
-
 
 function doneCallback(){
 
@@ -59,14 +61,20 @@ function doneCallback(){
     },2000)
 
     // react to express request 
-    script_event_emitter.on_smart( "test_http_event" , async( data )=>{
+    script_event_emitter.on_smart_http( "test_http_event" , async( data )=>{
     
         console.log();
         console.log(data);
         console.log();
         const time = (new Date()).getTime();
         const client = "client";
-        return {time,client};
+        
+        return {
+            status:200,
+            msg:"hello Julie",
+            type:"text/plain",
+            msg_only:false
+        };
     });
 
 

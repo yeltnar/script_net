@@ -31,6 +31,18 @@ class WsServer{
         wss.on('connection', (ws, request)=>{
             console.log("new connection ");
 
+            const connect_msg:CloudEventContainer = {
+                device_meta_data:{},
+                event_name:EventStrings.GREET,
+                event:{
+                    event_type: WsEventType.INFO,
+                    uuid: uuid_v4(),
+                    data: null,
+                }
+            };
+
+            ws.send( JSON.stringify(connect_msg) );
+
             this.setUpClient(ws, request);
 
             this.setupKeepAlivePing( ws );
@@ -165,7 +177,15 @@ class WsServer{
                 const {device_meta_data} = ws;
 
                 if( ws.readyState===1  ){
-                    ws.ping( JSON.stringify({date, ...device_meta_data}) );
+                    //ws.ping( JSON.stringify({date, ...device_meta_data}) );
+                    //ws.ping( JSON.stringify({date, device_meta_data}) );
+
+                    const data_str = JSON.stringify({date, ...device_meta_data});
+
+                    console.log( data_str );
+                    //ws.ping( data_str ); // TODO put back
+                    ws.ping( "keep alive" );
+
                 }else{
                     console.error("WS IS CLOSED BUT WE ARE TRYING TO PING");
                 }

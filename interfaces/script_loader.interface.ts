@@ -18,6 +18,7 @@ enum  EventStrings{
     RESOLVE_EVENT = "RESOLVE_EVENT",
     ADD_EXPRESS_ENDPOINT = "ADD_EXPRESS_ENDPOINT",
     REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT",
+    GREET = "GREET",
 }
 
 // registers an attached device 

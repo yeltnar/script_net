@@ -12,6 +12,16 @@ interface EventEmitterCallback {
     (data: CloudEventContainer): Promise<object>;
 }
 
+interface HttpReturn {
+    status:number, // it is assumed on the server that these are required
+    msg:any, // it is assumed on the server that these are required
+    type:"application/json"|"text/html"|"text/css"|"application/javascript"|"text/plain", // it is assumed on the server that these are required
+    msg_only:boolean // it is assumed on the server that these are required
+}
+interface EventEmitterCallbackHttp {
+    (data: CloudEventContainer): Promise<HttpReturn>;
+}
+
 class ScriptEventEmitter {
 
     registered_cloud_events:Array<LocalEventEntry> = [];
@@ -48,7 +58,10 @@ class ScriptEventEmitter {
             console.log(" is open ");
         });
         if( doneCallback!==undefined ){
-            ws_client.on("open", doneCallback);
+            ws_client.on("open", ()=>{
+                console.log("calling doneCallback...");
+                doneCallback(this);
+            });
         }
 
     }
@@ -149,6 +162,13 @@ class ScriptEventEmitter {
         });
 
     }
+    
+    // http version of on_smart. it requires some http metadata 
+    public on_smart_http=( event:string, f:EventEmitterCallbackHttp )=>{
+
+        this.on_smart( event, f );
+
+    }
 
     /******* start of stub functions *******/
     // these will be replaced by core functions
@@ -189,4 +209,4 @@ class ScriptEventEmitter {
 
 }
 
-export {ScriptEventEmitter, uuid_v4}
+export {ScriptEventEmitter, uuid_v4, HttpReturn}

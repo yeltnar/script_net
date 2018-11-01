@@ -4,6 +4,8 @@ import {WsServer} from "./WsServer.class"
 import {ScriptEventEmitter, uuid_v4} from "./../ScriptEventEmitter.class"
 import {ScriptNetServerObj,ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
+import {HttpReturn} from "../ScriptEventEmitter.class"
+
 const EventEmitter = require("events");
 
 import {EventStrings, AddExpressEndpointContainer, WsEventType, CloudEventContainer, ExpressReplyContainer, EventContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
@@ -16,8 +18,9 @@ class ScriptnetServer {
     script_event_emitter:ScriptEventEmitter;
 
     script_net_ws_server_obj:ScriptNetServerObj = {
-        protocol: "ws", // TODO fix this and use config
-        address:"127.0.0.1:3000" // I think this should stay at local host
+        //protocol: "ws", // TODO fix this and use config
+        protocol: process.env.BLUEMIX_REGION===undefined ? "ws" : "wss", // I think this should stay at local host, // TODO fix this and use config
+        address: process.env.BLUEMIX_REGION===undefined ? "127.0.0.1:3000" : "ws-expose.mybluemix.net" // I think this should stay at local host
     };
     script_net_ws_client_obj:ScriptNetClientObj = {
         parser_name:"cloud_express_server",
@@ -40,9 +43,13 @@ class ScriptnetServer {
         })
 
         this.express_server.startPromise.then(()=>{
+            console.log("express server started");
             const httpServer = this.express_server.getHttpServer()
+            console.log("making new ws server");
             this.ws_server = new WsServer(httpServer, this.cloud_event_emitter, this.express_server.app);
+            console.log("after make new ws server");
             this.ws_server.wss.on("listening", ()=>{
+                console.log("ws server started")
                 this.connectToWsServer();
                 if( doneCallback!==undefined ){
                     doneCallback();
@@ -52,37 +59,43 @@ class ScriptnetServer {
     }
 
     connectToWsServer=()=>{
-        this.script_event_emitter = new ScriptEventEmitter( this.script_net_ws_server_obj, this.script_net_ws_client_obj);
+        
 
-        console.log("connectToWsServer...")
+        const timeout = process.env.BLUEMIX_REGION===undefined ? 0 : 1000*30; // delay if on bm
 
-        this.script_event_emitter.ws_client.on("error", ()=>{
-            console.log("error");
-        })
+        setTimeout(()=>{
+            this.script_event_emitter = new ScriptEventEmitter( this.script_net_ws_server_obj, this.script_net_ws_client_obj);
 
-        this.script_event_emitter.ws_client.on("open", ()=>{
+            console.log("connectToWsServer...")
 
-            console.log("connectToWsServer - open ")
+            this.script_event_emitter.ws_client.on("error", ()=>{
+                console.log("ws_client.on error");
+            })
 
-            //throw "need to know the router and ws refrence to add and remove"
-            //this.script_event_emitter.registered_cloud_events
-            this.script_event_emitter.addRegisteredEvent({
-                cloud_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
-                required_keys_table:null,
-                script_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
-            });
+            this.script_event_emitter.ws_client.on("open", ()=>{
 
-            this.script_event_emitter.addRegisteredEvent({
-                cloud_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
-                required_keys_table:null,
-                script_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
-            });
+                console.log("connectToWsServer - open ")
 
-            this.script_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, this.addExpressEndpoint);
-            this.script_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, this.removeExpressRouter);
+                //throw "need to know the router and ws refrence to add and remove"
+                //this.script_event_emitter.registered_cloud_events
+                this.script_event_emitter.addRegisteredEvent({
+                    cloud_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
+                    required_keys_table:null,
+                    script_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
+                });
 
-            console.log("sent AddExpressEndpointContainer");
-        })
+                this.script_event_emitter.addRegisteredEvent({
+                    cloud_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
+                    required_keys_table:null,
+                    script_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
+                });
+
+                this.script_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, this.addExpressEndpoint);
+                this.script_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, this.removeExpressRouter);
+
+                console.log("sent AddExpressEndpointContainer");
+            })
+        }, timeout)
 
     }
 
@@ -166,7 +179,26 @@ class ScriptnetServer {
             }
 
             this.script_event_emitter.emitToCloudPromise( cloud_event_container ).then(( event_container:EventContainer )=>{
-                res.json( event_container );
+
+                const http_return:HttpReturn = event_container.event.data;
+
+                // if have all HttpReturn fields...
+                if( http_return.status !== undefined && http_return.msg !== undefined && http_return.type !== undefined && http_return.msg_only !== undefined ){
+
+                    if( http_return.msg_only!==true ){
+
+                        res.json( event_container );
+
+                    }else{
+                        res.type( http_return.type );
+                        res.status( http_return.status ).end( http_return.msg )
+                    }
+
+
+                }else{
+                    res.json( event_container );
+                }
+                
             });
         };
 
