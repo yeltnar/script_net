@@ -8,7 +8,7 @@ Object.keys( console ).forEach((cur)=>{
 
     console[cur] = ( ...arr )=>{
         backup_console[cur]( ...arr );
-        fs.appendFileSync('message.txt', arr[0]+"\n");
+        fs.appendFileSync('message.txt', JSON.stringify(arr[0])+"\n");
     }
 })
 
