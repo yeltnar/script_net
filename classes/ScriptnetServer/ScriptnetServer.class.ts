@@ -26,7 +26,7 @@ class ScriptnetServer {
         parser_token:"bluemix"// TODO fix
     };
 
-    constructor( doneCallback ){
+    constructor( doneCallback? ){
 
         this.express_server = new ExpressServer( this.cloud_event_emitter );
 
@@ -44,7 +44,9 @@ class ScriptnetServer {
             this.ws_server = new WsServer(httpServer, this.cloud_event_emitter, this.express_server.app);
             this.ws_server.wss.on("listening", ()=>{
                 this.connectToWsServer();
-                doneCallback();
+                if( doneCallback!==undefined ){
+                    doneCallback();
+                }
             })
         });
     }

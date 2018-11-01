@@ -38,7 +38,13 @@ class ScriptEventEmitter {
         const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj} );
 
         this._sendToWsServer = ( data_str )=>{
-            ws_client.send( data_str );
+            if( ws_client.readyState === 1 ){
+                ws_client.send( data_str );
+            }else{
+                ws_client.close();
+                console.log("!!!ws is closed!!!")
+            }   
+            
         }
 
         this.ws_client = ws_client;

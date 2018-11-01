@@ -87,12 +87,16 @@ class WsServer{
 
                 // resolve undefined data if shouldn't send
                 if( data!==undefined ){
-                    if( ws.readyState === 1 ){
-                        ws.send( JSON.stringify(data) );
-                    }else{
-                        const {device_meta_data} = ws
-                        console.log( `not sending to ws(${JSON.stringify(device_meta_data)})... ready state is ${ws.readyState}` );
-                    }
+
+                    ws.send( JSON.stringify(data) );
+
+                    // if( ws.readyState === 1 ){
+                    //     ws.send( JSON.stringify(data) );
+                    // }else{
+                    //     const {device_meta_data} = ws
+                    //     //ws.close();
+                    //     console.log( `not sending to ws(${JSON.stringify(device_meta_data)})... ready state is ${ws.readyState}` );
+                    // }
                 }
                 
             });
