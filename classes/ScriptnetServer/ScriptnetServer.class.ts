@@ -4,6 +4,8 @@ import {WsServer} from "./WsServer.class"
 import {ScriptEventEmitter, uuid_v4} from "./../ScriptEventEmitter.class"
 import {ScriptNetServerObj,ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
+import {HttpReturn} from "../ScriptEventEmitter.class"
+
 const EventEmitter = require("events");
 
 import {EventStrings, AddExpressEndpointContainer, WsEventType, CloudEventContainer, ExpressReplyContainer, EventContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
@@ -177,7 +179,26 @@ class ScriptnetServer {
             }
 
             this.script_event_emitter.emitToCloudPromise( cloud_event_container ).then(( event_container:EventContainer )=>{
-                res.json( event_container );
+
+                const http_return:HttpReturn = event_container.event.data;
+
+                // if have all HttpReturn fields...
+                if( http_return.status !== undefined && http_return.msg !== undefined && http_return.type !== undefined && http_return.msg_only !== undefined ){
+
+                    if( http_return.msg_only!==true ){
+
+                        res.json( event_container );
+
+                    }else{
+                        res.type( http_return.type );
+                        res.status( http_return.status ).end( http_return.msg )
+                    }
+
+
+                }else{
+                    res.json( event_container );
+                }
+                
             });
         };
 
