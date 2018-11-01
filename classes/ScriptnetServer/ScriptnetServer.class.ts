@@ -57,7 +57,7 @@ class ScriptnetServer {
         console.log("connectToWsServer...")
 
         this.script_event_emitter.ws_client.on("error", ()=>{
-            console.log("error");
+            console.log("ws_client.on error");
         })
 
         this.script_event_emitter.ws_client.on("open", ()=>{

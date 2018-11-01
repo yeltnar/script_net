@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.ts",
   "engines": {
-    "node": "8.*"
+    "node": "8.10.0"
   },
   "scripts": {
     "test": "clear; ts-node test.ts",
