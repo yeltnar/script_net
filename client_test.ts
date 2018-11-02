@@ -51,17 +51,12 @@ function doneCallback( script_event_emitter:ScriptEventEmitter ){
     // add express endpoint that emits event
     script_event_emitter.emitToCloud( x ); 
 
-    // setTimeout(()=>{
-
-        // register for same event you emit from express
-        script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"test_http_event_cloud",
-            required_keys_table:null,
-            script_event_string:"test_http_event",
-        });
-
-
-    // },2000)
+    // register for same event you emit from express
+    script_event_emitter.addRegisteredEvent({
+        cloud_event_string:"test_http_event_cloud",
+        required_keys_table:null,
+        script_event_string:"test_http_event",
+    });
 
     // react to express request 
     script_event_emitter.on_smart_http( "test_http_event" , async( data )=>{
