@@ -28,7 +28,7 @@ class ScriptEventEmitter {
 
     private eventEmitter;
 
-    ws_client;
+    getWsClient;
 
     constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj, doneCallback? ){
 
@@ -39,31 +39,17 @@ class ScriptEventEmitter {
 
         this.eventEmitter = eventEmitter;
 
-        const ws_client  = this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj} );
+        this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj}, doneCallback );
 
         this._sendToWsServer = ( data_str )=>{
-            if( ws_client.readyState === 1 ){
-                ws_client.send( data_str );
+            if( this.getWsClient().readyState === 1 ){
+                this.getWsClient().send( data_str );
             }else{
-                ws_client.close();
+                this.getWsClient().close();
                 console.log("!!!ws is closed!!!")
             }   
             
         }
-
-        this.ws_client = ws_client;
-
-        ws_client.on("open", this.addRegisteredEvents);
-        ws_client.on("open", ()=>{
-            console.log(" is open ");
-        });
-        if( doneCallback!==undefined ){
-            ws_client.on("open", ()=>{
-                console.log("calling doneCallback...");
-                doneCallback(this);
-            });
-        }
-
     }
 
     // this is sent into the ws to be emitted on the cloud
@@ -131,17 +117,11 @@ class ScriptEventEmitter {
         this._sendToWsServer( data_str );
     }
 
-    private bindToWebSocket( {ws_client, script_net_ws_server_obj, script_net_ws_client_obj}:{ws_client?, script_net_ws_server_obj?, script_net_ws_client_obj} ){
+    private bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj}:{script_net_ws_server_obj?, script_net_ws_client_obj}, doneCallback ){
 
-        if( ws_client ){
-            ws_client = ws_client;
-        }else if( script_net_ws_server_obj ){
-            ws_client = setUpWebsocket( script_net_ws_server_obj, script_net_ws_client_obj );
-        }
-
-        ws_client.on("message", this.ws_message)
-
-        return ws_client;
+        this.getWsClient = setUpWebsocket( script_net_ws_server_obj, script_net_ws_client_obj, (ws)=>{ 
+            this.onConnected(doneCallback, ws) 
+        });
     }
 
     private ws_message = ( event_container:EventContainer )=>{
@@ -156,6 +136,8 @@ class ScriptEventEmitter {
     // smart version of on
     public on_smart=( event:string, f:EventEmitterCallback )=>{
 
+        console.log("add smart "+event)
+
         this.on( event, async( data:CloudEventContainer )=>{
             let f_result = await f( data );
             this.resolveToCloud( data.event.uuid, f_result );
@@ -166,8 +148,29 @@ class ScriptEventEmitter {
     // http version of on_smart. it requires some http metadata 
     public on_smart_http=( event:string, f:EventEmitterCallbackHttp )=>{
 
-        this.on_smart( event, f );
+        return this.on_smart( event, f );
 
+    }
+
+    private onConnected = ( doneCallback, ws )=>{
+
+        console.log( "ws.device_meta_data..." );
+        console.log( ws.device_meta_data );
+        
+        console.log(" is open ");
+
+        this.addRegisteredEvents()
+
+        this.getWsClient().on("message", this.ws_message)
+
+        this.getWsClient().on("open", ()=>{
+            
+        });
+
+        if( doneCallback!==undefined ){
+            console.log("calling doneCallback...");
+            doneCallback(this);
+        }
     }
 
     /******* start of stub functions *******/

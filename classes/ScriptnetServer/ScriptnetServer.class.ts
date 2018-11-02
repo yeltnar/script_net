@@ -26,7 +26,8 @@ class ScriptnetServer {
         parser_name:"cloud_express_server",
         device_name:"bluemix",
         group_name:"bluemix",
-        parser_token:"bluemix"// TODO fix
+        parser_token:"bluemix", // TODO fix
+        connection_id:uuid_v4()
     };
 
     constructor( doneCallback? ){
@@ -68,11 +69,11 @@ class ScriptnetServer {
 
             console.log("connectToWsServer...")
 
-            this.script_event_emitter.ws_client.on("error", ()=>{
+            this.script_event_emitter.getWsClient().on("error", ()=>{
                 console.log("ws_client.on error");
             })
 
-            this.script_event_emitter.ws_client.on("open", ()=>{
+            this.script_event_emitter.getWsClient().on("open", ()=>{
 
                 console.log("connectToWsServer - open ")
 
@@ -108,7 +109,7 @@ class ScriptnetServer {
 
         let {router_name, express_string, cloud_event_string, http_method, allow_keep_router_name} = data.event.data;
 
-        const default_router_name:string = data.sender_device_meta_data.script_name + data.sender_device_meta_data.device_name + data.sender_device_meta_data.group_name;
+        const default_router_name:string = data.sender_device_meta_data.connection_id + data.sender_device_meta_data.script_name + data.sender_device_meta_data.device_name + data.sender_device_meta_data.group_name;
 
         router_name = allow_keep_router_name===true ? router_name : default_router_name;
 

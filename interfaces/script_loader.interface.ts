@@ -81,6 +81,7 @@ interface CloudEventContainer extends EventContainer{
         script_name:string,
         device_name:string,
         group_name:string,
+        connection_id:string,
     }
 }
 
