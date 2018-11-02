@@ -10,6 +10,47 @@ const EventEmitter = require("events");
 
 import {EventStrings, AddExpressEndpointContainer, WsEventType, CloudEventContainer, ExpressReplyContainer, EventContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
 
+const REQ_KEEP_ARR = [
+    "_consuming",
+    "_dumped",
+    "_events",
+    "_eventsCount",
+    "_maxListeners",
+    "_parsedUrl",
+    "_readableState",
+    "baseUrl",
+    "body",
+    "complete",
+    "domain",
+    "headers",
+    "httpVersion",
+    "httpVersionMajor",
+    "httpVersionMinor",
+    "ip",
+    "ips",
+    "method",
+    "next",
+    "originalUrl",
+    "params",
+    "path",
+    "protocol",
+    "query",
+    "rawHeaders",
+    "rawTrailers",
+    "readable",
+    "route",
+    "statusCode",
+    "statusMessage",
+    "secure",
+    "signedCookies",
+    "stale",
+    "subdomains",
+    "trailers",
+    "upgrade",
+    "url",
+    "xhr"
+];
+
 class ScriptnetServer {
 
     express_server:ExpressServer;
@@ -157,7 +198,6 @@ class ScriptnetServer {
         return ( req, res )=>{
             //res.end(cloud_event_string);
             req = this.pullOutRequestData(req);
-            req = ":shrug:";
 
             // const cloud_event_container:ExpressReplyContainer = {
             //     event:{
@@ -206,7 +246,14 @@ class ScriptnetServer {
     }
 
     pullOutRequestData=( req )=>{
-        return req;
+
+        const filtered_req = {};
+
+        REQ_KEEP_ARR.forEach((cur, i, arr)=>{
+            filtered_req[cur] = req[cur];
+        });
+
+        return filtered_req;
     }
 }
 
