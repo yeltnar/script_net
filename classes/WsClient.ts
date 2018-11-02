@@ -7,17 +7,17 @@ import {timeout}  from "../shared_files/ping_timeout"
 
 const MAX_PING_INTERVAL = timeout*2;
 
-function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_client_obj:ScriptNetClientObj ){
+function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_client_obj:ScriptNetClientObj, onConnected ){
 
     const ws_final_url = scriptnet_server_obj.protocol+"://"+scriptnet_server_obj.address+getQueryParams(script_net_client_obj);
 
     console.log("connecting to "+ws_final_url+" "+(new Date().toString()));
 
-    const ws = new WebSocket( ws_final_url );
+    let ws = new WebSocket( ws_final_url );
 
     ws.on("open", ()=>{
         console.log("connected "+ws_final_url+" "+(new Date().toString()));
-
+        onConnected(ws);
     });
 
     ws.on("message", ( msg )=>{
@@ -29,18 +29,17 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
         console.log({script_net_client_obj})
         console.log("error "+JSON.stringify(error));
 
-        // console.warn("NEED TO MAKE SURE THIS DOES NOT SET UP TWO CONNECTIONS TO THE SERVER WITH THE WS.ON CLOSE");
-
         ws.close();
-        // setUpWebsocket( scriptnet_server_obj, script_net_client_obj );
-        // clearRestartTimer();
     })
 
     ws.on('close', () => {
 
         console.log("disconnected "+ws_final_url+" "+(new Date().toString()));
 
-        setTimeout(()=>{ setUpWebsocket( scriptnet_server_obj, script_net_client_obj );}, 1000)
+        setTimeout(()=>{ 
+            // need to call setUpWebsocket returned function to actually get the new ws 
+            getWebSocket = setUpWebsocket( scriptnet_server_obj, script_net_client_obj, onConnected );
+        }, 1000)
         console.log("ws closed...clearRestartTimer")
         clearRestartTimer();
     });
@@ -55,7 +54,14 @@ function setUpWebsocket(  scriptnet_server_obj:ScriptNetServerObj, script_net_cl
         ws.close(); 
     }, MAX_PING_INTERVAL)
 
-    return ws;
+    let getWebSocket=()=>{
+        return ws;
+    }
+
+    // return get function so the ws reference can change 
+    return function(){
+        return getWebSocket();
+    }
 }
 
 function getQueryParams( script_net_client_obj:ScriptNetClientObj ){

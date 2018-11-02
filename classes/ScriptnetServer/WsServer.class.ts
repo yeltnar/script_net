@@ -59,9 +59,9 @@ class WsServer{
         try{
         
             const queryData = url.parse(info.req.url, true).query
-            const {parser_name,device_name,group_name,parser_token} = queryData;
+            const {parser_name,device_name,group_name,parser_token,connection_id} = queryData;
             
-            if( parser_name && device_name && group_name && parser_token ){
+            if( parser_name && device_name && group_name && parser_token && connection_id ){
                 // good to go
                 console.log("good to go")
                 callback(true);
@@ -70,10 +70,10 @@ class WsServer{
                 console.error(err_str);
                 console.error("-----");
                 console.error(queryData);
-                console.error({parser_name, device_name, group_name, parser_token});
+                console.error({parser_name, device_name, group_name, parser_token, connection_id});
                 console.error("-----");
                 //throw err_str;
-                callback(false, 401, JSON.stringify({parser_name, device_name, group_name, parser_token}))
+                callback(false, 401, JSON.stringify({parser_name, device_name, group_name, parser_token, connection_id}))
             }
 
         }catch(e){
@@ -89,8 +89,8 @@ class WsServer{
         this.setUpParallelClient(  );
 
         const queryData = url.parse(req.url, true).query
-        const {parser_name,device_name,group_name,parser_token} = queryData;
-        ws.device_meta_data = {parser_name,device_name,group_name,parser_token};
+        const {parser_name,device_name,group_name,parser_token,connection_id} = queryData;
+        ws.device_meta_data = {parser_name,device_name,group_name,parser_token,connection_id};
         console.log(ws.device_meta_data);
 
         const event_callback = ( cloud_event_container:CloudEventContainer )=>{
@@ -124,7 +124,7 @@ class WsServer{
         ws.on("close", ()=>{
 
             // remove express routes
-            const default_router_name:string = ws.device_meta_data.script_name + ws.device_meta_data.device_name + ws.device_meta_data.group_name;
+            const default_router_name:string = ws.device_meta_data.connection_id + ws.device_meta_data.script_name + ws.device_meta_data.device_name + ws.device_meta_data.group_name;
 
             const data:RemoveExpressRouterContainer = {
                 event:{
@@ -203,10 +203,10 @@ class WsServer{
             console.log("got message "+JSON.stringify(data));
 
             data.sender_device_meta_data = {
-                
                 script_name: ws.device_meta_data.parser_name,
                 device_name: ws.device_meta_data.device_name,
                 group_name: ws.device_meta_data.group_name,
+                connection_id: ws.device_meta_data.connection_id,
             };
 
             if( data.event.event_type===WsEventType.ADD_EVENT ){
