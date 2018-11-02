@@ -70,8 +70,53 @@ function doneCallback( script_event_emitter:ScriptEventEmitter ){
         
         return {
             status:200,
-            msg:"hello Julie",
+            msg:"😉",
             type:"text/plain",
+            msg_only:true
+        };
+    });
+
+    // SECOND TEST 
+
+    const x2:AddExpressEndpointContainer = {
+        event:{
+            event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
+            uuid: uuid_v4(),
+            data:{
+                router_name:"test123",
+                express_string:"/req_test",
+                http_method:"ALL",
+                cloud_event_string:"req_test_cloud"
+            }
+        },
+        device_meta_data:{},
+        event_name:WsEventType.ADD_EXPRESS_ENDPOINT,
+    };
+    
+    // add express endpoint that emits event
+    script_event_emitter.emitToCloud( x2 ); 
+
+    // register for same event you emit from express
+    script_event_emitter.addRegisteredEvent({
+        cloud_event_string:"req_test_cloud",
+        required_keys_table:null,
+        script_event_string:"req_test_client",
+    });
+
+    // react to express request 
+    script_event_emitter.on_smart_http( "req_test_client" , async( data )=>{
+    
+        console.log();
+        console.log("req_test_client");
+        console.log(data);
+        console.log();
+        const time = (new Date()).getTime();
+        const client = "client";
+        
+        return {
+            status:200,
+            msg:data,
+            type:"application/json",
             msg_only:false
         };
     });
