@@ -32,13 +32,6 @@ class ScriptEventEmitter {
 
     constructor( script_net_ws_server_obj:ScriptNetServerObj, script_net_ws_client_obj:ScriptNetClientObj, doneCallback? ){
 
-        const eventEmitter = new EventEmitter();
-
-        this.emit = eventEmitter.emit;
-        this.on = eventEmitter.on;
-
-        this.eventEmitter = eventEmitter;
-
         this.bindToWebSocket( {script_net_ws_server_obj, script_net_ws_client_obj}, doneCallback );
 
         this._sendToWsServer = ( data_str )=>{
@@ -153,6 +146,13 @@ class ScriptEventEmitter {
     }
 
     private onConnected = ( doneCallback, ws )=>{
+
+        const eventEmitter = new EventEmitter();
+
+        this.emit = eventEmitter.emit;
+        this.on = eventEmitter.on;
+
+        this.eventEmitter = eventEmitter;
 
         console.log( "ws.device_meta_data..." );
         console.log( ws.device_meta_data );
