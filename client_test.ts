@@ -14,7 +14,7 @@ const scriptnet_server_obj:ScriptNetServerObj = {
 
 const scriptnet_client_obj:ScriptNetClientObj = {
     parser_name:"http_test_parser",
-    device_name:"test_device",
+    device_name:"client_test_device",
     group_name:"test_group",
     parser_token:"test_token",
     connection_id:uuid_v4()
