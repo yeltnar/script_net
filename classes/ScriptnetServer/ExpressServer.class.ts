@@ -77,7 +77,7 @@ class ExpressServer{
                 res.end(toSend)
             });
 
-            console.log("added awake route");
+            console.log("baked in express routes");
 
 
         })
