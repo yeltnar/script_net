@@ -156,31 +156,31 @@ class ScriptnetServer {
 
         const router = this.express_server.getRouter( router_name );
 
-        let routerFunction;
+        const express_string_arr = [express_string, "/"+data.sender_device_meta_data.device_name+express_string];
 
         if( http_method==="GET" ){
 
-            router.get( express_string, this.initExpressCallback(cloud_event_string) );
+            router.get( express_string_arr, this.initExpressCallback(cloud_event_string) );
             console.log("GET");
-            console.log(cloud_event_string);
+            console.log(express_string_arr);
 
         }else if( http_method==="POST" ){
 
-            router.post( express_string, this.initExpressCallback(cloud_event_string) );
+            router.post( express_string_arr, this.initExpressCallback(cloud_event_string) );
             console.log("POST");
             console.log(cloud_event_string);
 
         }else if( http_method==="DELETE" ){
 
-            router.delete( express_string, this.initExpressCallback(cloud_event_string) );
+            router.delete( express_string_arr, this.initExpressCallback(cloud_event_string) );
             console.log("DELETE");
-            console.log(cloud_event_string);
+            console.log(express_string_arr);
 
         }else if( http_method==="ALL" ){
 
-            router.all( express_string, this.initExpressCallback(cloud_event_string) );
+            router.all( express_string_arr, this.initExpressCallback(cloud_event_string) );
             console.log("ALL");
-            console.log(cloud_event_string);
+            console.log(express_string_arr);
 
         }
     }
