@@ -48,6 +48,10 @@ class ExpressServer{
             //     res.status(400).json({err:"no endpoint triggered"})
             // });
 
+            this.app.get("/simple", (req, res, next)=>{
+                res.end("🙂")
+            });
+
             this.app.get("/awake", (req, res, next)=>{
                 res.end("200 "+JSON.stringify(process.env)+" "+process.env.PORT+" end ")
             });
