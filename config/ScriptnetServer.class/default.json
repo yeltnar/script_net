@@ -42,7 +42,7 @@
     "local_address":"127.0.0.1:3000",
     "remote_address":"ws-expose.mybluemix.net",
     
-    "parser_name":"cloud_express_server",
+    "script_name":"cloud_express_server",
     "device_name":"bluemix",
     "group_name":"bluemix",
     "parser_token":"bluemix",

@@ -5,7 +5,7 @@ interface ScriptNetServerObj{
 }
 
 interface ScriptNetClientObj{
-    parser_name:string,
+    script_name:string,
     device_name:string,
     group_name:string,
     parser_token:string,
