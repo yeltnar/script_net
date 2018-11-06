@@ -5,14 +5,17 @@ import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 const config = require("config");
 const requestP = require("request-promise-native");
 
-try{
-    start()
-}catch(e){
-    console.error(e);
-    console.error("error starting notify");
+function start(){
+    try{
+        console.log("notify starting")
+        do_start()
+    }catch(e){
+        console.error(e);
+        console.error("error starting notify");
+    }
 }
 
-function start(){
+function do_start(){
 
     const local_config = config.util.loadFileConfigs(__dirname+"/config");
 
