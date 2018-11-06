@@ -2,6 +2,9 @@
 import {ScriptnetServer} from "./classes/ScriptnetServer/ScriptnetServer.class"
 const fs = require('fs');
 
+//imports for script nodes... these need to be surrounded with a try catch  
+import "./script_nodes/notification/notify";
+
 const backup_console = {};
 Object.keys( console ).forEach((cur)=>{
     backup_console[cur] = console[cur];
@@ -12,4 +15,6 @@ Object.keys( console ).forEach((cur)=>{
     }
 })
 
-const scriptnet_server = new ScriptnetServer();
+const scriptnet_server = new ScriptnetServer( doneCallback );
+
+function doneCallback(){}
