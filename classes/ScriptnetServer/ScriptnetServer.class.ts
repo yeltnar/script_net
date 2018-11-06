@@ -10,46 +10,23 @@ const EventEmitter = require("events");
 
 import {EventStrings, AddExpressEndpointContainer, WsEventType, CloudEventContainer, ExpressReplyContainer, EventContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
 
-const REQ_KEEP_ARR = [
-    "_consuming",
-    "_dumped",
-    "_events",
-    "_eventsCount",
-    "_maxListeners",
-    "_parsedUrl",
-    "_readableState",
-    "baseUrl",
-    "body",
-    "complete",
-    "domain",
-    "headers",
-    "httpVersion",
-    "httpVersionMajor",
-    "httpVersionMinor",
-    "ip",
-    "ips",
-    "method",
-    "next",
-    "originalUrl",
-    "params",
-    "path",
-    "protocol",
-    "query",
-    "rawHeaders",
-    "rawTrailers",
-    "readable",
-    "route",
-    "statusCode",
-    "statusMessage",
-    "secure",
-    "signedCookies",
-    "stale",
-    "subdomains",
-    "trailers",
-    "upgrade",
-    "url",
-    "xhr"
-];
+const config = require("config");
+const local_config = config.util.loadFileConfigs(__dirname+"/../../config/ScriptnetServer.class"); // this needs to be relative to run directory 
+
+const {
+    REQ_KEEP_ARR, 
+    local_address, 
+    remote_address, 
+    parser_name, 
+    device_name, 
+    group_name, 
+    parser_token, 
+    local_protocol, 
+    remote_protocol
+} = local_config;
+
+const protocol = process.env.BLUEMIX_REGION===undefined ? local_protocol : remote_protocol; // I think this should stay at local host, // TODO fix this and use config
+const address = process.env.BLUEMIX_REGION===undefined ? local_address : remote_address; // I think this should stay at local host
 
 class ScriptnetServer {
 
@@ -59,15 +36,14 @@ class ScriptnetServer {
     script_event_emitter:ScriptEventEmitter;
 
     script_net_ws_server_obj:ScriptNetServerObj = {
-        //protocol: "ws", // TODO fix this and use config
-        protocol: process.env.BLUEMIX_REGION===undefined ? "ws" : "wss", // I think this should stay at local host, // TODO fix this and use config
-        address: process.env.BLUEMIX_REGION===undefined ? "127.0.0.1:3000" : "ws-expose.mybluemix.net" // I think this should stay at local host
+        protocol,
+        address
     };
     script_net_ws_client_obj:ScriptNetClientObj = {
-        parser_name:"cloud_express_server",
-        device_name:"bluemix",
-        group_name:"bluemix",
-        parser_token:"bluemix", // TODO fix
+        parser_name,
+        device_name,
+        group_name,
+        parser_token, // TODO fix
         connection_id:uuid_v4()
     };
 

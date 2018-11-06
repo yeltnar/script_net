@@ -1,24 +1,22 @@
 import {ScriptEventEmitter, uuid_v4} from "./classes/ScriptEventEmitter.class"
-import {CloudEventContainer, WsEventType, AddExpressEndpointContainer} from "./interfaces/script_loader.interface"
-import {ScriptNetServerObj, ScriptNetClientObj} from "./interfaces/ScriptnetObj.interface"
+import {WsEventType, AddExpressEndpointContainer} from "./interfaces/script_loader.interface"
+import {ScriptNetClientObj} from "./interfaces/ScriptnetObj.interface"
 
-const scriptnet_server_obj:ScriptNetServerObj = {
-    protocol:"ws",
-    address:"127.0.0.1:3000"
-};
+// import config_dir from "./helpers/config_dir";
 
-// const scriptnet_server_obj:ScriptNetServerObj = {
-//     protocol:"wss",
-//     address:"ws-expose.mybluemix.net"
-// };
+// const local_config = config_dir("./config/client_test");
 
-const scriptnet_client_obj:ScriptNetClientObj = {
-    parser_name:"http_test_parser",
-    device_name:"client_test_device",
-    group_name:"test_group",
-    parser_token:"test_token",
-    connection_id:uuid_v4()
-};
+const config = require("config");
+
+const local_config = config.util.loadFileConfigs("./config/client_test")
+
+console.log(local_config);
+
+//const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+
+const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
+scriptnet_client_obj.connection_id = uuid_v4();
 
 new ScriptEventEmitter(scriptnet_server_obj,scriptnet_client_obj, doneCallback);
 
