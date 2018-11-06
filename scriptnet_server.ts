@@ -3,7 +3,7 @@ import {ScriptnetServer} from "./classes/ScriptnetServer/ScriptnetServer.class"
 const fs = require('fs');
 
 //imports for script nodes... these need to be surrounded with a try catch  
-import "./script_nodes/notification/notify";
+import start_notify from "./script_nodes/notification/notify";
 
 const backup_console = {};
 Object.keys( console ).forEach((cur)=>{
@@ -17,4 +17,8 @@ Object.keys( console ).forEach((cur)=>{
 
 const scriptnet_server = new ScriptnetServer( doneCallback );
 
-function doneCallback(){}
+function doneCallback(){
+    setTimeout(()=>{ // make sure its actually up
+        start_notify();
+    },3000);
+}
