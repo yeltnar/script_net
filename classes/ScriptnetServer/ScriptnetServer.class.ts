@@ -17,7 +17,7 @@ const {
     REQ_KEEP_ARR, 
     local_address, 
     remote_address, 
-    parser_name, 
+    script_name, 
     device_name, 
     group_name, 
     parser_token, 
@@ -40,7 +40,7 @@ class ScriptnetServer {
         address
     };
     script_net_ws_client_obj:ScriptNetClientObj = {
-        parser_name,
+        script_name,
         device_name,
         group_name,
         parser_token, // TODO fix
@@ -207,8 +207,10 @@ class ScriptnetServer {
                         res.json( event_container );
 
                     }else{
+                        const msg = typeof http_return.msg==="string" ? http_return.msg : JSON.stringify(http_return.msg);
+
                         res.type( http_return.type );
-                        res.status( http_return.status ).end( http_return.msg )
+                        res.status( http_return.status ).end( msg )
                     }
 
 

@@ -9,7 +9,7 @@
     },
 
     "scriptnet_client_obj":{
-        "parser_name":"http_test_parser",
+        "script_name":"http_test_parser",
         "device_name":"client_test_device",
         "group_name":"test_group",
         "parser_token":"test_token"
