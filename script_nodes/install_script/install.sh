@@ -1,2 +1,4 @@
 echo "installing";
-curl localhost:3000/install_script | bash;
+git clone https://github.com/yeltnar/script_net.git;
+cd script_net; 
+npm i;

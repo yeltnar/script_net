@@ -10,7 +10,15 @@ try{
 
 }
 
-function start(){
+function start() {
+    try {
+        doStart();
+    }catch(e){
+        console.error("failed to start install host");
+    }
+}
+
+function doStart(){
 
     const config = require("config");
 
@@ -130,3 +138,5 @@ function start(){
 
     }
 }
+
+export default start;
