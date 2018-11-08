@@ -20,5 +20,5 @@ const scriptnet_server = new ScriptnetServer( doneCallback );
 function doneCallback(){
     setTimeout(()=>{ // make sure its actually up
         start_notify();
-    },3000);
+    },30000);
 }
