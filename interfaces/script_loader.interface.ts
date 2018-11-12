@@ -19,6 +19,7 @@ enum  EventStrings{
     ADD_EXPRESS_ENDPOINT = "ADD_EXPRESS_ENDPOINT",
     REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT",
     GREET = "GREET",
+    GET_TOKEN_HASH_OBJ = "GET_TOKEN_HASH_OBJ",
 }
 
 // registers an attached device 
