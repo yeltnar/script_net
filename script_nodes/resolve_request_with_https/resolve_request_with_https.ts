@@ -1,5 +1,5 @@
 import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.class"
-import {WsEventType, AddExpressEndpointContainer} from "../../interfaces/script_loader.interface"
+import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
 const fs = require("fs");
@@ -48,14 +48,14 @@ function doStart(){
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
                 data:{
-                    router_name:"install_script",
-                    express_string:"/install_script",
+                    router_name:"resolve_uuid",
+                    express_string:"/resolve_uuid",
                     http_method:"ALL",
-                    cloud_event_string:"install_script_cloud"
+                    cloud_event_string:EventStrings.RESOLVE_UUID_CLOUD
                 }
             },
             device_meta_data:{},
-            event_name:WsEventType.ADD_EXPRESS_ENDPOINT,
+            event_name:EventStrings.ADD_EXPRESS_ENDPOINT,
         };
         
         // add express endpoint that emits event
@@ -63,22 +63,21 @@ function doStart(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"install_script_cloud",
+            cloud_event_string:EventStrings.RESOLVE_UUID_CLOUD,
             required_keys_table:null,
-            script_event_string:"install_script",
+            script_event_string:EventStrings.RESOLVE_UUID_CLIENT,
         });
 
         // react to express request 
-        script_event_emitter.on_smart_http( "install_script" , async( data )=>{
-        
-            console.log();
-            console.log("install_script");
-            console.log(data);
-            console.log();
-            const time = (new Date()).getTime();
-            const client = "client";
+        script_event_emitter.on_smart_http( EventStrings.RESOLVE_UUID_CLIENT , async( data )=>{
 
-            const msg = fs.readFileSync(__dirname+"/install.sh").toString();
+            const {uuid} = data.event.data.query;
+
+            const msg = uuid||"uuid not provided";//fs.readFileSync(__dirname+"/install.sh").toString();
+
+            if( uuid ){
+                script_event_emitter.resolveToCloud( uuid, {}/* data */ );
+            }
             
             return {
                 status:200,
@@ -95,10 +94,10 @@ function doStart(){
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
                 data:{
-                    router_name:"test123",
-                    express_string:"/req_test",
+                    router_name:"pending_resolve",
+                    express_string:"/pending_resolve",
                     http_method:"ALL",
-                    cloud_event_string:"req_test_cloud"
+                    cloud_event_string:EventStrings.PENDING_RESOLVE_CLOUD
                 }
             },
             device_meta_data:{},
@@ -110,9 +109,9 @@ function doStart(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"req_test_cloud",
+            cloud_event_string:EventStrings.PENDING_RESOLVE_CLOUD,
             required_keys_table:null,
-            script_event_string:"req_test_client",
+            script_event_string:EventStrings.PENDING_RESOLVE_LOCAL,
         });
 
         // react to express request 
@@ -131,6 +130,8 @@ function doStart(){
                 type:"application/json",
                 msg_only:false
             };
+                console.log("START EventStrings.PENDING_RESOLVE_LOCAL")
+                console.log(EventStrings.PENDING_RESOLVE_LOCAL)
         });
 
 

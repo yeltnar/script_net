@@ -59,6 +59,8 @@ class ScriptEventEmitter {
                 if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
 
                 if( cloud_event_container.event.uuid===data.event.uuid ){
+
+                    console.log("resolving "+data.event.uuid);
                     resolve( data );
                     promise_is_resolved = true;
                     this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
@@ -127,7 +129,7 @@ class ScriptEventEmitter {
     }
     
     // smart version of on
-    public on_smart=( event:string, f:EventEmitterCallback )=>{
+    public on_smart=( event:EventStrings, f:EventEmitterCallback )=>{
 
         console.log("add smart "+event)
 
@@ -139,7 +141,7 @@ class ScriptEventEmitter {
     }
     
     // http version of on_smart. it requires some http metadata 
-    public on_smart_http=( event:string, f:EventEmitterCallbackHttp )=>{
+    public on_smart_http=( event:EventStrings, f:EventEmitterCallbackHttp )=>{
 
         return this.on_smart( event, f );
 
@@ -190,7 +192,7 @@ class ScriptEventEmitter {
     addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
 
         const to_emit_to_cloud:AddEventContainer = {
-            event_name:"ADD_CLOUD_EVENT",
+            event_name:EventStrings.ADD_CLOUD_EVENT,
             event:{
                 event_type:WsEventType.ADD_EVENT,
                 uuid:uuid_v4(),
