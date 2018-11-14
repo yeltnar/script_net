@@ -2,19 +2,13 @@ import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.clas
 import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
-const fs = require("fs");
-
-try{
-    start()
-}catch(e){
-
-}
 
 function start() {
     try {
         doStart();
     }catch(e){
-        console.error("failed to start install host");
+        console.error(e);
+        console.error("failed to start install resolve request with host");
     }
 }
 
@@ -26,7 +20,8 @@ function doStart(){
 
     console.log(local_config);
 
-    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.lan_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
     //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
@@ -87,9 +82,8 @@ function doStart(){
             };
         });
 
-        // SECOND TEST 
-
-        const x2:AddExpressEndpointContainer = {
+        // ************ pending resolve ************
+        const pending_resolve_event:AddExpressEndpointContainer = {
             event:{
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
@@ -101,11 +95,11 @@ function doStart(){
                 }
             },
             device_meta_data:{},
-            event_name:WsEventType.ADD_EXPRESS_ENDPOINT,
+            event_name:EventStrings.ADD_EXPRESS_ENDPOINT,
         };
         
         // add express endpoint that emits event
-        script_event_emitter.emitToCloud( x2 ); 
+        script_event_emitter.emitToCloud( pending_resolve_event ); 
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
@@ -115,25 +109,71 @@ function doStart(){
         });
 
         // react to express request 
-        script_event_emitter.on_smart_http( "req_test_client" , async( data )=>{
-        
-            console.log();
-            console.log("req_test_client");
-            console.log(data);
-            console.log();
-            const time = (new Date()).getTime();
-            const client = "client";
-            
-            return {
-                status:200,
-                msg:data,
-                type:"application/json",
-                msg_only:false
-            };
+        script_event_emitter.on_smart_http( EventStrings.PENDING_RESOLVE_LOCAL , ( data )=>{
+
+            return new Promise((resolve, reject)=>{
+
+                const uuid = uuid_v4()
+
+                //const msg = uuid;//fs.readFileSync(__dirname+"/install.sh").toString();
+
+                const {script_name,device_name,group_name} = data.event.data;
+
+                const title = "Click to allow entry";
+                const text = {script_name,device_name,group_name};
+                const url = scriptnet_server_obj.http_protocol+"://"+scriptnet_server_obj.address+"/resolve_uuid?uuid="+uuid;
+
+                const notify_container:CloudEventContainer = {
+                    device_meta_data:{},
+                    event_name:EventStrings.CLOUD_NOTIFY,
+                    event:{
+                        event_type:WsEventType.PLAIN,
+                        uuid:uuid_v4(),
+                        data:{ title, text, url },
+                    },
+                };
+                script_event_emitter.emitToCloud( notify_container ); // TODO add back
+
+                const pending_container:CloudEventContainer = {
+                    device_meta_data:{},
+                    event_name:EventStrings.START_PENDING_CLOUD,
+                    event:{
+                        event_type:WsEventType.PLAIN,
+                        uuid,
+                        data:{ text, title },
+                    },
+                };
+                script_event_emitter.emitToCloudPromise( pending_container ).then(( data )=>{
+                    
+                    console.log("")
+                    console.log("DONE EventStrings.PENDING_RESOLVE_LOCAL")
+                    console.log(EventStrings.PENDING_RESOLVE_LOCAL)
+                
+                    resolve ({
+                        status:200,
+                        msg:data,
+                        type:"application/json",
+                        msg_only:true
+                    });
+
+                }).catch(()=>{
+                    resolve({
+                        status:500,
+                        msg:"no response",
+                        type:"text/plain",
+                        msg_only:true
+                    })
+                });
+
+                console.log('\npending uuid is '+uuid);
+
+                console.log("")
+                console.log("")
+                console.log("")
                 console.log("START EventStrings.PENDING_RESOLVE_LOCAL")
                 console.log(EventStrings.PENDING_RESOLVE_LOCAL)
+            });
         });
-
 
         console.log("doneCallback finished")
 
