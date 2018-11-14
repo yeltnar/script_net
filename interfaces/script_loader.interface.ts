@@ -20,6 +20,19 @@ enum  EventStrings{
     REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT",
     GREET = "GREET",
     GET_TOKEN_HASH_OBJ = "GET_TOKEN_HASH_OBJ",
+    RESOLVE_UUID_EVENT = "RESOLVE_UUID_EVENT",
+    ADD_CLOUD_EVENT = "ADD_CLOUD_EVENT",
+
+    RESOLVE_UUID_CLOUD = "RESOLVE_UUID_CLOUD",
+    RESOLVE_UUID_CLIENT = "RESOLVE_UUID_CLIENT",
+    PENDING_RESOLVE_CLOUD = "PENDING_RESOLVE_CLOUD",
+    PENDING_RESOLVE_LOCAL = "PENDING_RESOLVE_LOCAL",
+    START_PENDING_CLOUD = "START_PENDING_CLOUD",
+
+    CLOUD_NOTIFY_HTTP = "CLOUD_NOTIFY_HTTP",
+    LOCAL_NOTIFY_HTTP = "LOCAL_NOTIFY_HTTP",
+    CLOUD_NOTIFY = "CLOUD_NOTIFY",
+    LOCAL_NOTIFY = "LOCAL_NOTIFY",
 }
 
 // registers an attached device 
@@ -50,9 +63,9 @@ interface ScriptLoader {
     ]
 }
 interface LocalEventEntry{
-    cloud_event_string:string,   // brodcast cloud event to be watching for
+    cloud_event_string:EventStrings,   // brodcast cloud event to be watching for
     required_keys_table:[RequiredKeysElement], // checks the EventContainer.event.data contents 
-    script_event_string:string, // check out LocalWsEventContainer... the event_name is this exact field 
+    script_event_string:EventStrings, // check out LocalWsEventContainer... the event_name is this exact field 
 }
 
 // list of keys (and optional values) that need to be there for the event to continue
@@ -64,7 +77,7 @@ interface RequiredKeysElement{
 
 // event object that can be sent to ws or other event emitter applications
 interface EventContainer{
-    event_name:string,
+    event_name:EventStrings,
     event:{
         event_type:WsEventType,
         uuid:string,
@@ -102,7 +115,7 @@ interface AddExpressEndpointContainer extends CloudEventContainer{
             router_name:string,
             express_string:string,
             http_method:"GET"|"POST"|"DELETE"|"ALL",
-            cloud_event_string:string,
+            cloud_event_string:EventStrings,
             allow_keep_router_name?:boolean
         }
     }
@@ -140,6 +153,8 @@ function checkEventContainer( ec:EventContainer ):boolean{
     if( check===true ){
         return check;
     }else{
+        console.error( "***ec***" )
+        console.error( ec )
         throw new Error("checkEventContainer test failed!");
     }
 }
@@ -171,49 +186,49 @@ export {
     ExpressReplyContainer,
 }
 
-let script_loader_example:ScriptLoader = {
+// let script_loader_example:ScriptLoader = {
 
-    filter_version:"0",
+//     filter_version:"0",
 
-    device_name:"test_device",
-    group_name:"test_group",
-    script_name:"test_script",
+//     device_name:"test_device",
+//     group_name:"test_group",
+//     script_name:"test_script",
     
-    cloud_event_string_list:[
-        "TEST_123"
-    ],
+//     cloud_event_string_list:[
+//         "TEST_123"
+//     ],
 
     
-    local_event_table:[
-        {
-            // when TEST_123 happens and the keys match fire 123_TEST on ws connection 
-            cloud_event_string:"TEST_123",
-            required_keys_table:[
-                {
-                    key:"body"
-                }
-            ],
-            script_event_string:"123_TEST"
-        }
-    ]
-};
+//     local_event_table:[
+//         {
+//             // when TEST_123 happens and the keys match fire 123_TEST on ws connection 
+//             cloud_event_string:"TEST_123",
+//             required_keys_table:[
+//                 {
+//                     key:"body"
+//                 }
+//             ],
+//             script_event_string:"123_TEST"
+//         }
+//     ]
+// };
 
-//example event
-let example_event:EventContainer = {
-    event_name:"test123",
-    event:{
-        event_type:WsEventType.PLAIN,
-        uuid:"1111111111",
-        data:{}
-    }
-}
+// //example event
+// let example_event:EventContainer = {
+//     event_name:"test123",
+//     event:{
+//         event_type:WsEventType.PLAIN,
+//         uuid:"1111111111",
+//         data:{}
+//     }
+// }
 
-//example resolve event
-let example_resolve_event:EventContainer = {
-    event_name:"1111111111", // event_name and uuid should be the same in a resolving event
-    event:{
-        event_type:WsEventType.DONE,
-        uuid:"1111111111", // event_name and uuid should be the same in a resolving event
-        data:{}
-    }
-};
+// //example resolve event
+// let example_resolve_event:EventContainer = {
+//     event_name:"1111111111", // event_name and uuid should be the same in a resolving event
+//     event:{
+//         event_type:WsEventType.DONE,
+//         uuid:"1111111111", // event_name and uuid should be the same in a resolving event
+//         data:{}
+//     }
+// };
