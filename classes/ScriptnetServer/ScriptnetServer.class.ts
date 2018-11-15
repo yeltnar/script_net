@@ -168,7 +168,7 @@ class ScriptnetServer {
         this.express_server.removeRouter( router_name );
     }
 
-    initExpressCallback=( cloud_event_string:string )=>{
+    initExpressCallback=( cloud_event_string:EventStrings )=>{
 
         // this is the express endpoint callback
         return ( req, res )=>{

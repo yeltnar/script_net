@@ -6,26 +6,5 @@
         "args":[
             "../script_nodes/notification/notify"
         ]
-    },{
-        "name":"notify",
-        "script":"t.sh",
-        "cwd":"",
-        "args":[
-            "../script_nodes/notification/notify"
-        ]
-    },{
-        "name":"notify",
-        "script":"t.sh",
-        "cwd":"",
-        "args":[
-            "../script_nodes/notification/notify"
-        ]
-    },{
-        "name":"notify",
-        "script":"t.sh",
-        "cwd":"",
-        "args":[
-            "../script_nodes/notification/notify"
-        ]
     }
 ]
