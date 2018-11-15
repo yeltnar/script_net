@@ -101,7 +101,7 @@ interface AddExpressEndpointContainer extends CloudEventContainer{
             router_name:string,
             express_string:string,
             http_method:"GET"|"POST"|"DELETE"|"ALL",
-            cloud_event_string:string,
+            cloud_event_string:EventStrings,
             allow_keep_router_name?:boolean
         }
     }
