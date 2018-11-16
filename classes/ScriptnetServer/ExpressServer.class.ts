@@ -1,5 +1,6 @@
 const express = require("express");
 const fs = require('fs');
+const bodyParser = require('body-parser')
 
 import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer} from "../../interfaces/script_loader.interface"
 import { resolve } from "path";
@@ -93,6 +94,10 @@ class ExpressServer{
         }
 
         this.app = express();
+
+        this.app.use(bodyParser.urlencoded({ extended: false }))
+        this.app.use(bodyParser.json())// parse application/json
+
         this.app.set("port", port); // TODO move to config
         this.app.use((req:any, res:any, next:any)=>{
             console.log("request for: '"+req.url+"'");

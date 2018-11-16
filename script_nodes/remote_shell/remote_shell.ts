@@ -1,7 +1,9 @@
 import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.class"
 import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
+import sha512HexHash from "../../helpers/crypto"
 
+const {exec, execFile} = require("child_process")
 const config = require("config");
 const requestP = require("request-promise-native");
 
@@ -23,8 +25,8 @@ function do_start(){
 
     console.log(local_config);
 
-    //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
-    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
@@ -45,10 +47,10 @@ function do_start(){
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
                 data:{
-                    router_name:"notify",
-                    express_string:"/notify",
+                    router_name:"shell",
+                    express_string:"/shell",
                     http_method:"ALL",
-                    cloud_event_string:EventStrings.CLOUD_NOTIFY_HTTP
+                    cloud_event_string:EventStrings.SHELL_HTTP
                 }
             },
             device_meta_data:{},
@@ -60,48 +62,49 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:EventStrings.CLOUD_NOTIFY_HTTP,//"cloud_notify_http",
+            cloud_event_string:EventStrings.SHELL_HTTP,
             required_keys_table:null,
-            script_event_string:EventStrings.LOCAL_NOTIFY_HTTP,//"local_notify_http",
+            script_event_string:EventStrings.SHELL_HTTP,
         });
 
         // react to express request 
-        script_event_emitter.on_smart_http( EventStrings.LOCAL_NOTIFY_HTTP , ( data )=>{
+        script_event_emitter.on_smart_http( EventStrings.SHELL_HTTP , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
-                const { text, title } = data.event.data.query;
+                const query_body = {...data.event.data.body, ...data.event.data.query}
 
-                if( title===undefined || text===undefined ){
+                console.log("")
+                console.log("")
+                console.log({query_body})
+
+                const { shell, token } = query_body;
+
+                if( shell===undefined || token===undefined ){
 
                     resolve({
                         status: 200,
-                        msg: JSON.stringify({title:"is required",text:"is required"}),
+                        msg: JSON.stringify({shell:"is required",token:"is required"}),
                         type: "application/json",
                         msg_only: true
                     });
 
+                }else if( !shellTokenCheck(token) ){
+                    resolve({
+                        status: 401,
+                        msg: JSON.stringify({"err":"err"}),
+                        type: "application/json",
+                        msg_only: true
+                    })
                 }else{
-
-                    // requestP({
-                    //     method: 'GET',
-                    //     url: 'https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush',
-                    //     qs:
-                    //     {
-                    //         deviceId,
-                    //         text,
-                    //         title,
-                    //         apikey,
-                    //     }
-                    // })
 
                     const cloud_event_container:CloudEventContainer = {
                         device_meta_data:{},
-                        event_name:EventStrings.CLOUD_NOTIFY,
+                        event_name:EventStrings.SHELL,
                         event:{
                             event_type: WsEventType.PLAIN,
                             uuid: uuid_v4(),
-                            data: { ...data.event.data.query }
+                            data: { shell }
                         },
                     };
 
@@ -112,10 +115,8 @@ function do_start(){
         
                         resolve({
                             status: 200,
-                            //msg: JSON.stringify(data.event.data.query),
-                            //msg: JSON.stringify(resp),
-                            msg: (resp),
-                            type: "application/json",
+                            msg: (resp.event.data),
+                            type: "text/plain",
                             msg_only: true
                         });
         
@@ -138,69 +139,31 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:EventStrings.CLOUD_NOTIFY,
+            cloud_event_string:EventStrings.SHELL,
             required_keys_table:null,
-            script_event_string:EventStrings.LOCAL_NOTIFY,
+            script_event_string:EventStrings.SHELL,
         });
 
         // react to express request 
-        script_event_emitter.on_smart( EventStrings.LOCAL_NOTIFY , ( data )=>{
+        script_event_emitter.on_smart( EventStrings.SHELL , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
-                const { text, title, url } = data.event.data;
+                const { shell } = data.event.data;
 
                 console.log(data.event)
-                console.log("on local notify "+text+" "+title);
+                console.log("on local notify "+shell);
                 // process.exit();
 
-                if( title===undefined || text===undefined ){
+                if( shell===undefined ){
 
-                    resolve({
-                        status: 200,
-                        msg: {title:"is required",text:"is required"},
-                        type: "application/json",
-                        msg_only: true
-                    });
+                    resolve({shell:"is required"});
 
                 }else{
 
-                    const qs = {...data.event.data, deviceId, apikey};
-
-                    requestP({
-                        method: 'GET',
-                        url: 'https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush',
-                        qs
-                    }).then(( resp )=>{
-        
-                        console.log('in then for notify request ')
-                        console.log(
-                            text,
-                            title,
-                            url
-                        )
-        
-                        resolve({
-                            status: 200,
-                            //msg: JSON.stringify(data.event.data.query),
-                            //msg: JSON.stringify(resp),
-                            msg: {resp,qs},
-                            type: "application/json",
-                            msg_only: true
-                        });
-        
-                    }).catch((err)=>{
-                        resolve({
-                            status: 500,
-                            msg: err,
-                            type: "application/json",
-                            msg_only: false
-                        });
-                    });
-
+                    console.log("running "+shell)
+                    execPromise( shell ).then(resolve)
                 }
-
-
             })
             
             
@@ -214,6 +177,29 @@ function do_start(){
 
 export default start;
 
-const msg = "this is a test";
-console.log(msg);
-console.log( require('crypto').createHash('sha1').update(msg).digest('base64') );
+function shellTokenCheck( token ){
+    return sha512HexHash(token)==="f11c3f6e0a268fc4ee58d97fa897f12fa8d5dea9e08e39c55daafb3ceeb16a067c675cdf0eebd1d0f298ee70dcfb721d249b001fbb5e8b4b16a455c76e6e93ea";
+}
+
+
+// TODO move to helper
+
+function execPromise(command){
+    return new Promise((resolve, reject)=>{
+
+
+        exec(command, (err, stdout, stderr)=>{
+            if(err){
+                console.error(err)
+                console.error(command+" failed exec err")
+                return reject(err);
+            }else if(stderr){
+                console.log(command+" failed stderr "+stderr)
+                return resolve(stderr);
+            }else{
+                console.log(command+" success "+stdout)
+                return resolve(stdout);
+            }
+        });
+    })
+}
