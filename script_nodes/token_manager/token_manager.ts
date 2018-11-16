@@ -102,6 +102,11 @@ function doStart(){
 
         script_event_emitter.on_smart( EventStrings.GET_TOKEN_HASH_OBJ, ()=>{
 
+            if( 1>0 ){
+                throw new Error("need to take script name when do this then use the alert user code then server the json tied to that file\n"+
+                                "also need to be able to serve more than one file so we can install a new token manger");
+            }
+
             return new Promise((resolve, reject)=>{
 
                 // TODO phone notification here
