@@ -1,0 +1,31 @@
+~new device~
+start app
+check if have local json
+ask script_net for local json with script name
+
+~security manager~
+get request for local json (need a request to get all local json for setting up remote security manager)
+prompt phone for allow local json request
+receive permission to give local json
+send local json to requesting client
+
+~new device~
+get local json
+set local json in RAM... at this time deep merge config with new json preferring new json
+save local json to FS and mark as non tracked for git
+
+------------------------------------------------------------------------
+
+/install
+    enum WhenToRun{
+        ALWAYS:"ALWAYS",
+    }
+
+    interface xxxxxxxxx{
+        git_url:string,
+        script_name?:string, // what to register script as
+        start_file_location:string // location within repo where the file that exports a start function as default is. Default of ./{REPO_NAME}.ts
+        when_to_run:WhenToRun,
+        when_to_run_data:object,
+        override_existing:boolean, // weather or not to force new download when this instal is run if dir is there already 
+    }
