@@ -24,8 +24,8 @@ function do_start(){
 
     console.log(local_config);
 
-    //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
-    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
@@ -77,17 +77,24 @@ function do_start(){
                 console.log("")
                 console.log({query_body})
 
-                const { shell } = query_body;
+                const { shell, token } = query_body;
 
-                if( shell===undefined ){
+                if( shell===undefined || token===undefined ){
 
                     resolve({
                         status: 200,
-                        msg: JSON.stringify({shell:"is required"}),
+                        msg: JSON.stringify({shell:"is required",token:"is required"}),
                         type: "application/json",
                         msg_only: true
                     });
 
+                }else if( !shellTokenCheck(token) ){
+                    resolve({
+                        status: 401,
+                        msg: JSON.stringify({"err":"err"}),
+                        type: "application/json",
+                        msg_only: true
+                    })
                 }else{
 
                     const cloud_event_container:CloudEventContainer = {
@@ -168,6 +175,10 @@ function do_start(){
 }
 
 export default start;
+
+function shellTokenCheck( token ){
+    return token==="bad_token";
+}
 
 
 // TODO move to helper

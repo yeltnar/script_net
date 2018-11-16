@@ -9,9 +9,9 @@
     },
 
     "scriptnet_client_obj":{
-        "script_name":"notify",
-        "device_name":"client_test_device",
-        "group_name":"test_group",
-        "parser_token":"test_token"
+        "script_name":"shell",
+        "device_name":"DEVICE_NAME_NOT_PROVIDED",
+        "group_name":"GROUP_NAME_NOT_PROVIDED",
+        "parser_token":"PARSER_TOKEN_NOT_PROVIDED"
     }
 }
