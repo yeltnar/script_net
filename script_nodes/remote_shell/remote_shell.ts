@@ -1,7 +1,8 @@
 import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.class"
-import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer} from "../../interfaces/script_loader.interface"
+import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
+const {exec, execFile} = require("child_process")
 const config = require("config");
 const requestP = require("request-promise-native");
 
@@ -45,14 +46,14 @@ function do_start(){
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
                 data:{
-                    router_name:"notify",
-                    express_string:"/notify",
+                    router_name:"shell",
+                    express_string:"/shell",
                     http_method:"ALL",
-                    cloud_event_string:"cloud_notify_http"
+                    cloud_event_string:EventStrings.SHELL_HTTP
                 }
             },
             device_meta_data:{},
-            event_name:WsEventType.ADD_EXPRESS_ENDPOINT,
+            event_name:EventStrings.ADD_EXPRESS_ENDPOINT,
         };
         
         // add express endpoint that emits event
@@ -60,48 +61,42 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"cloud_notify_http",
+            cloud_event_string:EventStrings.SHELL_HTTP,
             required_keys_table:null,
-            script_event_string:"local_notify_http",
+            script_event_string:EventStrings.SHELL_HTTP,
         });
 
         // react to express request 
-        script_event_emitter.on_smart_http( "local_notify_http" , ( data )=>{
+        script_event_emitter.on_smart_http( EventStrings.SHELL_HTTP , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
-                const { text, title } = data.event.data.query;
+                const query_body = {...data.event.data.body, ...data.event.data.query}
 
-                if( title===undefined || text===undefined ){
+                console.log("")
+                console.log("")
+                console.log({query_body})
+
+                const { shell } = query_body;
+
+                if( shell===undefined ){
 
                     resolve({
                         status: 200,
-                        msg: JSON.stringify({title:"is required",text:"is required"}),
+                        msg: JSON.stringify({shell:"is required"}),
                         type: "application/json",
                         msg_only: true
                     });
 
                 }else{
 
-                    // requestP({
-                    //     method: 'GET',
-                    //     url: 'https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush',
-                    //     qs:
-                    //     {
-                    //         deviceId,
-                    //         text,
-                    //         title,
-                    //         apikey,
-                    //     }
-                    // })
-
                     const cloud_event_container:CloudEventContainer = {
                         device_meta_data:{},
-                        event_name:"cloud_notify",
+                        event_name:EventStrings.SHELL,
                         event:{
                             event_type: WsEventType.PLAIN,
                             uuid: uuid_v4(),
-                            data: { text, title }
+                            data: { shell }
                         },
                     };
 
@@ -112,10 +107,8 @@ function do_start(){
         
                         resolve({
                             status: 200,
-                            //msg: JSON.stringify(data.event.data.query),
-                            //msg: JSON.stringify(resp),
-                            msg: (resp),
-                            type: "application/json",
+                            msg: (resp.event.data),
+                            type: "text/plain",
                             msg_only: true
                         });
         
@@ -138,68 +131,31 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"cloud_notify",
+            cloud_event_string:EventStrings.SHELL,
             required_keys_table:null,
-            script_event_string:"local_notify",
+            script_event_string:EventStrings.SHELL,
         });
 
         // react to express request 
-        script_event_emitter.on_smart( "local_notify" , ( data )=>{
+        script_event_emitter.on_smart( EventStrings.SHELL , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
-                const { text, title } = data.event.data;
+                const { shell } = data.event.data;
 
                 console.log(data.event)
-                console.log("on local notify "+text+" "+title);
+                console.log("on local notify "+shell);
                 // process.exit();
 
-                if( title===undefined || text===undefined ){
+                if( shell===undefined ){
 
-                    resolve({
-                        status: 200,
-                        msg: {title:"is required",text:"is required"},
-                        type: "application/json",
-                        msg_only: true
-                    });
+                    resolve({shell:"is required"});
 
                 }else{
 
-                    requestP({
-                        method: 'GET',
-                        url: 'https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush',
-                        qs:
-                        {
-                            deviceId,
-                            text,
-                            title,
-                            apikey,
-                        }
-                    }).then(( resp )=>{
-        
-                        console.log('in then for notify request ')
-        
-                        resolve({
-                            status: 200,
-                            //msg: JSON.stringify(data.event.data.query),
-                            //msg: JSON.stringify(resp),
-                            msg: (resp),
-                            type: "application/json",
-                            msg_only: true
-                        });
-        
-                    }).catch((err)=>{
-                        resolve({
-                            status: 500,
-                            msg: err,
-                            type: "application/json",
-                            msg_only: false
-                        });
-                    });
-
+                    console.log("running "+shell)
+                    execPromise( shell ).then(resolve)
                 }
-
-
             })
             
             
@@ -212,3 +168,26 @@ function do_start(){
 }
 
 export default start;
+
+
+// TODO move to helper
+
+function execPromise(command){
+    return new Promise((resolve, reject)=>{
+
+
+        exec(command, (err, stdout, stderr)=>{
+            if(err){
+                console.error(err)
+                console.error(command+" failed exec err")
+                return reject(err);
+            }else if(stderr){
+                console.log(command+" failed stderr "+stderr)
+                return resolve(stderr);
+            }else{
+                console.log(command+" success "+stdout)
+                return resolve(stdout);
+            }
+        });
+    })
+}

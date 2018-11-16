@@ -127,7 +127,7 @@ class ScriptEventEmitter {
     }
     
     // smart version of on
-    public on_smart=( event:string, f:EventEmitterCallback )=>{
+    public on_smart=( event:EventStrings, f:EventEmitterCallback )=>{
 
         console.log("add smart "+event)
 
@@ -139,7 +139,7 @@ class ScriptEventEmitter {
     }
     
     // http version of on_smart. it requires some http metadata 
-    public on_smart_http=( event:string, f:EventEmitterCallbackHttp )=>{
+    public on_smart_http=( event:EventStrings, f:EventEmitterCallbackHttp )=>{
 
         return this.on_smart( event, f );
 
@@ -190,7 +190,7 @@ class ScriptEventEmitter {
     addRegisteredEvent=( local_event_entry:LocalEventEntry )=>{
 
         const to_emit_to_cloud:AddEventContainer = {
-            event_name:"ADD_CLOUD_EVENT",
+            event_name:EventStrings.ADD_CLOUD_EVENT,
             event:{
                 event_type:WsEventType.ADD_EVENT,
                 uuid:uuid_v4(),
