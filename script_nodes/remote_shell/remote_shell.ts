@@ -1,6 +1,7 @@
 import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.class"
 import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
+import sha512HexHash from "../../helpers/crypto"
 
 const {exec, execFile} = require("child_process")
 const config = require("config");
@@ -177,7 +178,7 @@ function do_start(){
 export default start;
 
 function shellTokenCheck( token ){
-    return token==="bad_token";
+    return sha512HexHash(token)==="f11c3f6e0a268fc4ee58d97fa897f12fa8d5dea9e08e39c55daafb3ceeb16a067c675cdf0eebd1d0f298ee70dcfb721d249b001fbb5e8b4b16a455c76e6e93ea";
 }
 
 

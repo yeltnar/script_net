@@ -1,10 +1,11 @@
 const msg = require("uuid/v4")();
 const crypto = require('crypto');
-function sha512_hex_hash(msg){
+function sha512HexHash(msg){
     return crypto.createHash('sha512').update(msg).digest('hex');
 };
 
-const hash_test_string = "hash_test_string"
-console.log( "testing hash... "+hash_test_string+" "+sha512_hex_hash(hash_test_string) );
+//const hash_test_string = "hash_test_string"
+const hash_test_string = "test"
+console.log( "testing hash... "+hash_test_string+" "+sha512HexHash(hash_test_string) );
 
-export default sha512_hex_hash;
+export default sha512HexHash;
