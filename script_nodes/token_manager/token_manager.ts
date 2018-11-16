@@ -111,7 +111,8 @@ function doStart(){
 
                 if( fs.existsSync(token_file_path) ){
     
-                    const token_hash = fs.readFileSync(token_file_path).toString();;
+                    const token_hash = JSON.parse(fs.readFileSync(token_file_path).toString());
+                    throw new Error("need to figure out how to store this data so it can be read");
 
                     console.log("reading "+token_file_path)
 
