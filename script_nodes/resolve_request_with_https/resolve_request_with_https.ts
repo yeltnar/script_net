@@ -20,8 +20,8 @@ function doStart(){
 
     console.log(local_config);
 
-    const scriptnet_server_obj = local_config.lan_scriptnet_server_obj
-    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.lan_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
     //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
@@ -38,7 +38,7 @@ function doStart(){
             process.exit(0);
         });
 
-        const x:AddExpressEndpointContainer = {
+        const add_resolve_uuid_endpoint:AddExpressEndpointContainer = {
             event:{
                 event_type:WsEventType.ADD_EXPRESS_ENDPOINT,
                 uuid: uuid_v4(),
@@ -54,7 +54,7 @@ function doStart(){
         };
         
         // add express endpoint that emits event
-        script_event_emitter.emitToCloud( x ); 
+        script_event_emitter.emitToCloud( add_resolve_uuid_endpoint ); 
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
@@ -81,6 +81,8 @@ function doStart(){
                 msg_only:true
             };
         });
+
+
 
         // ************ pending resolve ************
         const pending_resolve_event:AddExpressEndpointContainer = {
@@ -120,7 +122,7 @@ function doStart(){
                 const {script_name,device_name,group_name} = data.event.data;
 
                 const title = "Click to allow entry";
-                const text = {script_name,device_name,group_name};
+                const text = JSON.stringify({script_name,device_name,group_name});
                 const url = scriptnet_server_obj.http_protocol+"://"+scriptnet_server_obj.address+"/resolve_uuid?uuid="+uuid;
 
                 const notify_container:CloudEventContainer = {
@@ -148,6 +150,7 @@ function doStart(){
                     console.log("")
                     console.log("DONE EventStrings.PENDING_RESOLVE_LOCAL")
                     console.log(EventStrings.PENDING_RESOLVE_LOCAL)
+                    console.log(data)
                 
                     resolve ({
                         status:200,
