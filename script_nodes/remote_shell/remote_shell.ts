@@ -72,11 +72,9 @@ function do_start(){
 
             return new Promise((resolve, reject) => {
 
-                const query_body = {...data.event.data.body, ...data.event.data.query}
+                const query_body = {...data.event.data.query, ...data.event.data.body}
 
-                console.log("")
-                console.log("")
-                console.log({query_body})
+                console.log("query_body for SHELL_HTTP "+JSON.stringify(query_body));
 
                 const { shell, token } = query_body;
 
