@@ -1,7 +1,7 @@
 import {timeout as MAX_PING_INTERVAL}  from "../../shared_files/ping_timeout";
 import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
 import {filter} from "./filter"
-import {checkRequiredKeys} from "./checkRequiredKeys"
+//import {checkRequiredKeys} from "./checkRequiredKeys"
 import { uuid_v4 } from "../ScriptEventEmitter.class";
 
 const WebSocket = require('ws');
