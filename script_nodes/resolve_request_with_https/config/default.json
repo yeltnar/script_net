@@ -1,0 +1,24 @@
+{
+    "remote_scriptnet_server_obj":{
+        "protocol":"wss",
+        "http_protocol":"https",
+        "address":"ws-expose.mybluemix.net"
+    },
+    "local_scriptnet_server_obj":{
+        "protocol":"ws",
+        "http_protocol":"http",
+        "address":"127.0.0.1:3000"
+    },
+    "lan_scriptnet_server_obj":{
+        "protocol":"ws",
+        "http_protocol":"http",
+        "address":"172.19.20.26:3000"
+    },
+
+    "scriptnet_client_obj":{
+        "script_name":"notify",
+        "device_name":"client_test_device",
+        "group_name":"test_group",
+        "parser_token":"test_token"
+    }
+}

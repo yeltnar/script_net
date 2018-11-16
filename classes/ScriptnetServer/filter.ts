@@ -1,7 +1,7 @@
 // I do want these different ones
-import {CloudEventContainer, checkEventContainer} from "../../interfaces/script_loader.interface"
+import {CloudEventContainer, checkEventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 
-function filter(ws, required_keys_table, data:CloudEventContainer, script_event_string:string):Promise<CloudEventContainer>{
+function filter(ws, required_keys_table, data:CloudEventContainer, script_event_string:EventStrings):Promise<CloudEventContainer>{
 
     return new Promise((resolve, reject)=>{
 
