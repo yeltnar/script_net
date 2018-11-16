@@ -59,6 +59,8 @@ class ScriptEventEmitter {
                 if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
 
                 if( cloud_event_container.event.uuid===data.event.uuid ){
+
+                    console.log("resolving "+data.event.uuid);
                     resolve( data );
                     promise_is_resolved = true;
                     this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );

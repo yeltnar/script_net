@@ -1,5 +1,5 @@
 import {ScriptEventEmitter, uuid_v4} from "../../classes/ScriptEventEmitter.class"
-import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer} from "../../interfaces/script_loader.interface"
+import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkCloudEventContainer, EventContainer, EventStrings} from "../../interfaces/script_loader.interface"
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 
 const config = require("config");
@@ -23,8 +23,8 @@ function do_start(){
 
     console.log(local_config);
 
-    const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
-    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
@@ -48,11 +48,11 @@ function do_start(){
                     router_name:"notify",
                     express_string:"/notify",
                     http_method:"ALL",
-                    cloud_event_string:"cloud_notify_http"
+                    cloud_event_string:EventStrings.CLOUD_NOTIFY_HTTP
                 }
             },
             device_meta_data:{},
-            event_name:WsEventType.ADD_EXPRESS_ENDPOINT,
+            event_name:EventStrings.ADD_EXPRESS_ENDPOINT,
         };
         
         // add express endpoint that emits event
@@ -60,13 +60,13 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"cloud_notify_http",
+            cloud_event_string:EventStrings.CLOUD_NOTIFY_HTTP,//"cloud_notify_http",
             required_keys_table:null,
-            script_event_string:"local_notify_http",
+            script_event_string:EventStrings.LOCAL_NOTIFY_HTTP,//"local_notify_http",
         });
 
         // react to express request 
-        script_event_emitter.on_smart_http( "local_notify_http" , ( data )=>{
+        script_event_emitter.on_smart_http( EventStrings.LOCAL_NOTIFY_HTTP , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
@@ -97,11 +97,11 @@ function do_start(){
 
                     const cloud_event_container:CloudEventContainer = {
                         device_meta_data:{},
-                        event_name:"cloud_notify",
+                        event_name:EventStrings.CLOUD_NOTIFY,
                         event:{
                             event_type: WsEventType.PLAIN,
                             uuid: uuid_v4(),
-                            data: { text, title }
+                            data: { ...data.event.data.query }
                         },
                     };
 
@@ -138,17 +138,17 @@ function do_start(){
 
         // register for same event you emit from express
         script_event_emitter.addRegisteredEvent({
-            cloud_event_string:"cloud_notify",
+            cloud_event_string:EventStrings.CLOUD_NOTIFY,
             required_keys_table:null,
-            script_event_string:"local_notify",
+            script_event_string:EventStrings.LOCAL_NOTIFY,
         });
 
         // react to express request 
-        script_event_emitter.on_smart( "local_notify" , ( data )=>{
+        script_event_emitter.on_smart( EventStrings.LOCAL_NOTIFY , ( data )=>{
 
             return new Promise((resolve, reject) => {
 
-                const { text, title } = data.event.data;
+                const { text, title, url } = data.event.data;
 
                 console.log(data.event)
                 console.log("on local notify "+text+" "+title);
@@ -165,25 +165,26 @@ function do_start(){
 
                 }else{
 
+                    const qs = {...data.event.data, deviceId, apikey};
+
                     requestP({
                         method: 'GET',
                         url: 'https://joinjoaomgcd.appspot.com/_ah/api/messaging/v1/sendPush',
-                        qs:
-                        {
-                            deviceId,
-                            text,
-                            title,
-                            apikey,
-                        }
+                        qs
                     }).then(( resp )=>{
         
                         console.log('in then for notify request ')
+                        console.log(
+                            text,
+                            title,
+                            url
+                        )
         
                         resolve({
                             status: 200,
                             //msg: JSON.stringify(data.event.data.query),
                             //msg: JSON.stringify(resp),
-                            msg: (resp),
+                            msg: {resp,qs},
                             type: "application/json",
                             msg_only: true
                         });
@@ -212,3 +213,7 @@ function do_start(){
 }
 
 export default start;
+
+const msg = "this is a test";
+console.log(msg);
+console.log( require('crypto').createHash('sha1').update(msg).digest('base64') );

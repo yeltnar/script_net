@@ -20,10 +20,24 @@ enum  EventStrings{
     REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT",
     GREET = "GREET",
 
+    GET_TOKEN_HASH_OBJ = "GET_TOKEN_HASH_OBJ",
+    RESOLVE_UUID_EVENT = "RESOLVE_UUID_EVENT",
     ADD_CLOUD_EVENT = "ADD_CLOUD_EVENT",
+
+    RESOLVE_UUID_CLOUD = "RESOLVE_UUID_CLOUD",
+    RESOLVE_UUID_CLIENT = "RESOLVE_UUID_CLIENT",
+    PENDING_RESOLVE_CLOUD = "PENDING_RESOLVE_CLOUD",
+    PENDING_RESOLVE_LOCAL = "PENDING_RESOLVE_LOCAL",
+    START_PENDING_CLOUD = "START_PENDING_CLOUD",
+
+    CLOUD_NOTIFY_HTTP = "CLOUD_NOTIFY_HTTP",
+    LOCAL_NOTIFY_HTTP = "LOCAL_NOTIFY_HTTP",
+    CLOUD_NOTIFY = "CLOUD_NOTIFY",
+    LOCAL_NOTIFY = "LOCAL_NOTIFY",
 
     SHELL = "SHELL",
     SHELL_HTTP = "SHELL_HTTP",
+
 }
 
 // registers an attached device 
@@ -144,6 +158,8 @@ function checkEventContainer( ec:EventContainer ):boolean{
     if( check===true ){
         return check;
     }else{
+        console.error( "***ec***" )
+        console.error( ec )
         throw new Error("checkEventContainer test failed!");
     }
 }
