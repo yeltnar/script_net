@@ -21,8 +21,8 @@ function doStart(){
     console.log(local_config);
 
     //const scriptnet_server_obj = local_config.lan_scriptnet_server_obj
-    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
-    //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
@@ -119,7 +119,7 @@ function doStart(){
 
                 //const msg = uuid;//fs.readFileSync(__dirname+"/install.sh").toString();
 
-                const {script_name,device_name,group_name} = data.event.data;
+                const {script_name,device_name,group_name} = data.sender_device_meta_data;
 
                 const title = "Click to allow entry";
                 const text = JSON.stringify({script_name,device_name,group_name});
@@ -152,7 +152,7 @@ function doStart(){
                     console.log(EventStrings.PENDING_RESOLVE_LOCAL)
                     console.log(data)
                 
-                    resolve ({
+                    resolve({
                         status:200,
                         msg:data,
                         type:"application/json",
