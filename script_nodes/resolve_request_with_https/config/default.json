@@ -16,8 +16,8 @@
     },
 
     "scriptnet_client_obj":{
-        "script_name":"notify",
-        "device_name":"client_test_device",
+        "script_name":"resolve_request_with_https",
+        "device_name":"FILL_THIS_IN",
         "group_name":"test_group",
         "parser_token":"test_token"
     }

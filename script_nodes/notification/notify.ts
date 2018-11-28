@@ -23,8 +23,8 @@ function do_start(){
 
     console.log(local_config);
 
-    //const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
-    const scriptnet_server_obj = local_config.local_scriptnet_server_obj
+    const scriptnet_server_obj = local_config.remote_scriptnet_server_obj
+    //const scriptnet_server_obj = local_config.local_scriptnet_server_obj
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
