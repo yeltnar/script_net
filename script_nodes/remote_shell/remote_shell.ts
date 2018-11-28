@@ -176,6 +176,11 @@ function do_start(){
 export default start;
 
 function shellTokenCheck( token ){
+    console.warn("");
+    console.warn("");
+    console.warn("need to do tokens better");
+    console.warn("");
+    console.warn("");
     return sha512HexHash(token)==="f11c3f6e0a268fc4ee58d97fa897f12fa8d5dea9e08e39c55daafb3ceeb16a067c675cdf0eebd1d0f298ee70dcfb721d249b001fbb5e8b4b16a455c76e6e93ea";
 }
 
