@@ -54,6 +54,9 @@ class ScriptEventEmitter {
 
             this.emitToCloud( cloud_event_container );
 
+            // need reference to event emitter so we can use it inside a not arrow notation scope 
+            const eventEmitter = this.eventEmitter;
+
             this.on( EventStrings.RESOLVE_EVENT, function once( data:EventContainer ){
 
                 if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
@@ -63,7 +66,7 @@ class ScriptEventEmitter {
                     console.log("resolving "+data.event.uuid);
                     resolve( data );
                     promise_is_resolved = true;
-                    this.eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
+                    eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
                 }
             });
 
@@ -146,15 +149,18 @@ class ScriptEventEmitter {
         return this.on_smart( event, f );
 
     }
+   
+    private emit=(...params)=>{
+        this.eventEmitter.emit(...params);
+    };
+
+    public on=(...params)=>{
+        this.eventEmitter.on(...params);
+    }
 
     private onConnected = ( doneCallback, ws )=>{
 
-        const eventEmitter = new EventEmitter();
-
-        this.emit = eventEmitter.emit;
-        this.on = eventEmitter.on;
-
-        this.eventEmitter = eventEmitter;
+        this.eventEmitter = new EventEmitter();
 
         console.log( "ws.device_meta_data..." );
         console.log( ws.device_meta_data );
@@ -177,14 +183,6 @@ class ScriptEventEmitter {
 
     /******* start of stub functions *******/
     // these will be replaced by core functions
-
-    // this is replaced by the event emitter version     
-    // function only to be called by ws (or another valid source) 
-    private emit=( event: string|symbol, ...args:any[] )=>{}
-
-    // this is replaced by the event emitter version 
-    // function to listen to ws events
-    public on=( event:string|symbol, listener )=>{}
 
     // this is replaced by the ws version... no need for code in this function
     private _sendToWsServer=( s:string )=>{}
