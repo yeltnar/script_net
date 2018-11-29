@@ -1,0 +1,17 @@
+{
+    "remote_scriptnet_server_obj":{
+        "protocol":"wss",
+        "address":"ws-expose.mybluemix.net"
+    },
+    "local_scriptnet_server_obj":{
+        "protocol":"ws",
+        "address":"127.0.0.1:3000"
+    },
+
+    "scriptnet_client_obj":{
+        "script_name":"shell",
+        "device_name":"DEVICE_NAME_NOT_PROVIDED",
+        "group_name":"GROUP_NAME_NOT_PROVIDED",
+        "parser_token":"PARSER_TOKEN_NOT_PROVIDED"
+    }
+}
