@@ -101,7 +101,7 @@ class ScriptnetServer {
                     required_keys_table:null,
                     script_event_string:EventStrings.ADD_EXPRESS_ENDPOINT,
                 });
-
+              
                 this.script_event_emitter.addRegisteredEvent({
                     cloud_event_string:EventStrings.REMOVE_EXPRESS_ENDPOINT,
                     required_keys_table:null,
@@ -110,6 +110,7 @@ class ScriptnetServer {
 
                 this.script_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, this.addExpressEndpoint);
                 this.script_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, this.removeExpressRouter);
+                this.ws_server.express_set_up = true;
 
                 console.log("sent AddExpressEndpointContainer");
             })
