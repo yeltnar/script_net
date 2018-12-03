@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start":"clear; ts-node stdin.test"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1"
+  }
+}
