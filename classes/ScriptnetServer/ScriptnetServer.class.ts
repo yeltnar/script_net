@@ -79,6 +79,9 @@ class ScriptnetServer {
     connectToWsServer=()=>{
 
         const doneCallback = ( script_event_emitter )=>{
+
+            this.script_event_emitter = script_event_emitter;
+
             console.log("connectToWsServer...")
 
             // script_event_emitter.getWsClient().on("error", ()=>{
