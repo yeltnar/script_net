@@ -84,8 +84,8 @@ class WsServer{
 
             }else{
 
-                console.log("express is not set up!")
-                console.log( this.express_app );
+                console.log("express is not set up! Will try again soon ")
+                //console.log( this.express_app );
 
                 setTimeout(()=>{
                     this.verifyClient( info, callback );
