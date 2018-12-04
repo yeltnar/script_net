@@ -241,13 +241,8 @@ export {ScriptnetServer};
 
 
 function notify_setup( script_event_emitter:ScriptEventEmitter ){
-
-    console.log()
-    console.log()
-    console.log("notify_setup")
-    console.log(notify_setup)
-    console.log()
-    console.log()
+    
+    console.log("notify_setup called")
 
     const data = { 
         text:(new Date()).toString(), 
