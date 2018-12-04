@@ -13,6 +13,8 @@ class WsServer{
     cloud_event_emitter;
     express_app;
 
+    verifier_setup = false;
+
     express_set_up = false;
 
     constructor( server, cloud_event_emitter, express_app ){
@@ -59,32 +61,58 @@ class WsServer{
         console.log("calling verifyClient");
 
         try{
+
+            let allow = false;
         
             const queryData = url.parse(info.req.url, true).query
-            const {script_name,device_name,group_name,parser_token,connection_id} = queryData;
+            const {script_name,device_name,group_name,parser_token,connection_id, script_net_connector_token} = queryData;
 
-            if( script_name==="cloud_express_server" || script_name==="express_server" || this.express_set_up===true ){ // allow express to connect without it already being connected 
+            if( this.express_set_up===true ){
+                
+                allow = true;
 
-            
-                if( script_name && device_name && group_name && parser_token && connection_id ){
-                    // good to go
-                    console.log("good to go")
-                    callback(true);
+            }else if( (script_name==="cloud_express_server" || script_name==="express_server") && this.verifier_setup===true ){
+                
+                allow = true;
+
+            }else if( script_name==="verifier" ){
+                
+                allow = true;
+
+            }
+
+            if( allow ){
+
+                if( script_name && device_name && group_name && parser_token && connection_id && script_net_connector_token ){
+
+                    if( checkTokenAdded(script_net_connector_token) ){
+
+                        // good to go
+                        console.log("good to go")
+                        callback(true);
+
+                    }else{
+
+                        //
+                        get permission for connection 
+                        save uuid to be approved by checkTokenAdded
+                    }
+
                 }else{
                     const err_str = "Required field missing";
                     console.error(err_str);
                     console.error("-----");
                     console.error(queryData);
-                    console.error({script_name, device_name, group_name, parser_token, connection_id});
+                    console.error({script_name, device_name, group_name, parser_token, connection_id, script_net_connector_token});
                     console.error("-----");
                     //throw err_str;
-                    callback(false, 401, JSON.stringify({script_name, device_name, group_name, parser_token, connection_id}))
+                    callback(false, 401, JSON.stringify({script_name, device_name, group_name, parser_token, connection_id, script_net_connector_token}))
                 }
-                
 
             }else{
 
-                console.log("express is not set up! Will try again soon ")
+                console.log("server not ready! Will try again soon ")
+                console.log(queryData);
                 //console.log( this.express_app );
 
                 setTimeout(()=>{
