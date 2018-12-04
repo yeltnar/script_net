@@ -109,6 +109,9 @@ class ScriptnetServer {
 
             this.ws_server.express_set_up = true;
 
+
+            setTimeout(notify_setup, 10000, script_event_emitter);
+
             console.log("sent AddExpressEndpointContainer");
 
         }
@@ -235,3 +238,32 @@ class ScriptnetServer {
 }
 
 export {ScriptnetServer};
+
+
+function notify_setup( script_event_emitter:ScriptEventEmitter ){
+
+    console.log()
+    console.log()
+    console.log("notify_setup")
+    console.log(notify_setup)
+    console.log()
+    console.log()
+
+    const data = { 
+        text:(new Date()).toString(), 
+        title:"Express is setup"
+    };
+
+    const notify_obj:CloudEventContainer = {
+        device_meta_data:{},
+        event_name:EventStrings.CLOUD_NOTIFY,
+        event:{
+            event_type:WsEventType.PLAIN,
+            uuid:uuid_v4(),
+            data
+        }
+    };
+
+    script_event_emitter.emitToCloud( notify_obj );
+
+}
