@@ -430,7 +430,7 @@ class WsServer{
         return token_good;
     }
 
-    private checkTokenAddedCloud = (script_net_connector_token:string, queryData:object):Promise<boolean>=>{
+    private checkTokenAddedCloud = (script_net_connector_token:string, ws_request_data:object):Promise<boolean>=>{
 
         console.log("checkTokenAddedCloud");
 
@@ -444,7 +444,7 @@ class WsServer{
                     uuid:uuid_v4(),
                     data:{
                         script_net_connector_token,
-                        queryData
+                        ws_request_data
                     }
                 },
             };
