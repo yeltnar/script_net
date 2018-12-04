@@ -9,6 +9,9 @@ enum WsEventType{
     
     ADD_EXPRESS_ENDPOINT = "ADD_EXPRESS_ENDPOINT", // add event string to be listened for 
     REMOVE_EXPRESS_ENDPOINT = "REMOVE_EXPRESS_ENDPOINT", // add event string to be listened for 
+    
+    VERIFIER_CONNECTED = "VERIFIER_CONNECTED", // add event string to be listened for 
+    VERIFIER_DISCONNECTED = "VERIFIER_DISCONNECTED", // add event string to be listened for 
 
     DONE = "DONE",
     ERROR = "ERROR"
@@ -37,6 +40,10 @@ enum  EventStrings{
 
     SHELL = "SHELL",
     SHELL_HTTP = "SHELL_HTTP",
+
+    VERIFIER_CONNECTED = "VERIFIER_CONNECTED",
+    VERIFIER_DISCONNECTED = "VERIFIER_DISCONNECTED",
+    REQUEST_VERIFICATION = "REQUEST_VERIFICATION",
 
 }
 
@@ -175,6 +182,10 @@ function checkCloudEventContainer( cec:CloudEventContainer ):boolean{
     }
 }
 
+interface EventEmitterCallback {
+    (data: CloudEventContainer): Promise<object>;
+}
+
 export {
     WsEventType, 
     ScriptLoader, 
@@ -189,6 +200,7 @@ export {
     AddExpressEndpointContainer,
     RemoveExpressRouterContainer,
     ExpressReplyContainer,
+    EventEmitterCallback
 }
 
 // let script_loader_example:ScriptLoader = {

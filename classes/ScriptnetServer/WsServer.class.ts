@@ -1,11 +1,24 @@
 import {timeout as MAX_PING_INTERVAL}  from "../../shared_files/ping_timeout";
-import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
+import {CloudEventContainer, checkCloudEventContainer, WsEventType, AddEventContainer, EventStrings, AddExpressEndpointContainer, RemoveExpressRouterContainer, EventContainer, EventEmitterCallback} from "../../interfaces/script_loader.interface"
 import {filter} from "./filter"
 //import {checkRequiredKeys} from "./checkRequiredKeys"
 import { uuid_v4 } from "../ScriptEventEmitter.class";
+import sha512HexHash from "../../helpers/crypto"
 
 const WebSocket = require('ws');
 const url = require('url');
+const config = require("config");//
+
+const {master_token_hash} = config;
+const MAX_PENDING_TIME = 30 * 60 * 1000;
+
+if( master_token_hash===undefined ){
+
+    console.log(config);
+
+    console.log("master_token not defined");
+    process.exit(-1);
+}
 
 class WsServer{
 
@@ -23,6 +36,9 @@ class WsServer{
         this.express_app = express_app;
 
         this.wsInit( server );
+
+        this.on_smart( EventStrings.VERIFIER_CONNECTED, this.verifier_added );
+        this.on_smart( EventStrings.VERIFIER_DISCONNECTED, this.verifier_removed ); // TODO make this work
     }
 
     private wsInit( server  ){
@@ -56,7 +72,7 @@ class WsServer{
         console.log("wsInit done");
     }
 
-    verifyClient=( info, callback )=>{
+    verifyClient=async( info, callback )=>{
 
         console.log("calling verifyClient");
 
@@ -85,7 +101,13 @@ class WsServer{
 
                 if( script_name && device_name && group_name && parser_token && connection_id && script_net_connector_token ){
 
-                    if( checkTokenAdded(script_net_connector_token) ){
+                    if( script_name==="verifier" && this.checkTokenAddedLocal(script_net_connector_token) ){
+
+                        // good to go
+                        console.log("verifier good to go")
+                        callback(true);
+
+                    }else if( await(this.checkTokenAddedCloud(script_net_connector_token, script_name)) ){
 
                         // good to go
                         console.log("good to go")
@@ -93,9 +115,32 @@ class WsServer{
 
                     }else{
 
-                        //
-                        get permission for connection 
-                        save uuid to be approved by checkTokenAdded
+                        if( 1>0 ){
+                            return callback(false, 401, JSON.stringify({script_name, device_name, group_name, parser_token, connection_id, script_net_connector_token}));
+                        }
+
+                        const approve_event:CloudEventContainer = {
+                            device_meta_data:{},
+                            event_name:EventStrings.PENDING_RESOLVE_CLOUD,
+                            event:{
+                                event_type:WsEventType.PLAIN,
+                                uuid:uuid_v4(),
+                                data:{},
+                            }
+                        };
+
+                        this.emitToCloudPromise( approve_event ).then(( data )=>{
+                            console.log( "got response from approve event" )
+                            console.log( data )
+
+                            console.log();
+                            console.log("need to save uuid");
+
+                            process.exit();
+                        }).catch(()=>{
+                            console.error("did not get approval");
+                            
+                        });
                     }
 
                 }else{
@@ -341,7 +386,7 @@ class WsServer{
                 console.log("WsEventType.HTTP "+JSON.stringify(data));
                 this.cloud_event_emitter.emit( data.event_name, data );
 
-            }else if( data.event.event_type===WsEventType.PLAIN || data.event.event_type===WsEventType.ADD_EXPRESS_ENDPOINT ){ 
+            }else if( data.event.event_type===WsEventType.PLAIN || data.event.event_type===WsEventType.ADD_EXPRESS_ENDPOINT || data.event.event_type===WsEventType.VERIFIER_CONNECTED || data.event.event_type===WsEventType.VERIFIER_DISCONNECTED ){ 
 
                 checkCloudEventContainer(data);
                 console.log("WsEventType.PLAIN "+JSON.stringify(data));
@@ -351,8 +396,170 @@ class WsServer{
         })
     }
 
+    private parseCloudMessage=()=>{
+        
+    }
+
     pullOutRequestData=( req )=>{
         return req;
+    }
+
+    // --------------------- script_net functions --------------------- 
+    private checkTokenAddedLocal = ( script_net_connector_token,  ):boolean=>{
+        console.error()
+        console.error()
+        console.error("need to check token")
+        console.error()
+
+
+        let token_good = false;
+
+        token_good = master_token_hash === sha512HexHash( script_net_connector_token );
+
+        console.log("sha512HexHash( script_net_connector_token )")
+        console.log(sha512HexHash( script_net_connector_token ))
+        console.log("master_token_hash")
+        console.log(master_token_hash)
+        console.log("token_good")
+        console.log(token_good)
+        console.log()
+        console.log()
+
+        return token_good;
+    }
+
+    private checkTokenAddedCloud = (script_net_connector_token:string, script_name:string):Promise<boolean>=>{
+
+        console.log("checkTokenAddedCloud");
+
+        return new Promise((resolve, reject)=>{
+            
+            const request_verification_obj:CloudEventContainer = {
+                device_meta_data:{},
+                event_name:EventStrings.REQUEST_VERIFICATION,
+                event:{
+                    event_type:WsEventType.PLAIN,
+                    uuid:uuid_v4(),
+                    data:{
+                        script_net_connector_token,
+                        script_name
+                    }
+                },
+            };
+
+            this.emitToCloudPromise( request_verification_obj ).then(( data )=>{
+                
+                const {result} = data.event.data;
+
+                resolve(result);
+
+            }).catch(()=>{
+                console.error("issue with verification");
+                resolve(false);
+            });
+
+        })
+    }
+
+    private emitToCloudPromise = ( cloud_event_container:CloudEventContainer|AddEventContainer ):Promise<any>=>{
+
+        let promise_is_resolved = false;
+    
+        return new Promise((resolve, reject)=>{
+
+            console.log( "emitToCloudPromise" )// TODO remove
+    
+            this.emitToCloud( cloud_event_container );
+    
+            // need reference to event emitter so we can use it inside a not arrow notation scope 
+            const eventEmitter = this.cloud_event_emitter;
+    
+            this.cloud_event_emitter.on( EventStrings.RESOLVE_EVENT, function once( data:EventContainer ){
+    
+                if(typeof data==="string"){ data=JSON.parse(data); } // make sure we have an object and not a string
+    
+                if( cloud_event_container.event.uuid===data.event.uuid ){
+    
+                    console.log("resolving "+data.event.uuid);
+                    resolve( data );
+                    promise_is_resolved = true;
+                    eventEmitter.removeListener( EventStrings.RESOLVE_EVENT, once );
+                }
+            });
+    
+            setTimeout(()=>{
+    
+                if( !promise_is_resolved ){
+                    console.error("TIMEOUT ERR - "+JSON.stringify(cloud_event_container))
+                    reject({err:"timeout"});
+                }
+    
+            }, MAX_PENDING_TIME);
+    
+        });
+    }
+
+    private emitToCloud( cloud_event_container:CloudEventContainer|AddEventContainer ){
+
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
+
+        console.log( "emitToCloud" )// TODO remove
+        console.log( JSON.stringify(cloud_event_container) )// TODO remove
+        //TODO remove ^
+
+        this.cloud_event_emitter.emit( cloud_event_container.event_name, cloud_event_container );
+
+    }
+    
+    // smart version of on
+    private on_smart=( event:EventStrings, f:EventEmitterCallback )=>{
+
+        console.log("add smart "+event)
+
+        this.cloud_event_emitter.on( event, async( data:CloudEventContainer )=>{
+            let f_result = await f( data );
+            this.resolveToCloud( data.event.uuid, f_result );
+        });
+
+    }
+
+    // this is sent into the ws to be emitted on the cloud
+    private resolveToCloud=( uuid:string, data )=>{
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
+
+        const cloud_event:CloudEventContainer = {
+            device_meta_data:null,
+            event_name:EventStrings.RESOLVE_EVENT,
+            event:{
+                event_type:WsEventType.DONE,
+                uuid,
+                data
+            }
+        };
+
+        //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
+
+        const data_str = JSON.stringify(cloud_event)
+
+        this.cloud_event_emitter.emit( data_str );
+    }
+
+    private verifier_added=async(  )=>{
+
+        this.verifier_setup = true
+
+        return {
+            verifier_setup:this.verifier_setup
+        };
+    }
+
+    private verifier_removed=async(  )=>{
+
+        this.verifier_setup = false
+
+        return {
+            verifier_setup:this.verifier_setup
+        };
     }
 }
 

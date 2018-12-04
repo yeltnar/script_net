@@ -1,5 +1,5 @@
 import {setUpWebsocket} from "./WsClient"
-import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer, LocalEventEntry, AddEventContainer, WsEventType, EventStrings} from "../interfaces/script_loader.interface"
+import {EventContainer, checkEventContainer, CloudEventContainer, checkCloudEventContainer, LocalEventEntry, AddEventContainer, WsEventType, EventStrings, EventEmitterCallback} from "../interfaces/script_loader.interface"
 import { EventEmitter } from "events";
 import {ScriptNetServerObj,ScriptNetClientObj} from "../interfaces/ScriptnetObj.interface"
 
@@ -7,10 +7,6 @@ const uuid_v4 = require('uuid/v4');
 
 
 const MAX_PENDING_TIME = 20000; // time in ms
-
-interface EventEmitterCallback {
-    (data: CloudEventContainer): Promise<object>;
-}
 
 interface HttpReturn {
     status:number, // it is assumed on the server that these are required
@@ -96,8 +92,6 @@ class ScriptEventEmitter {
     public resolveToCloud=( uuid:string, data )=>{
         //checkCloudEventContainer( cloud_event_container ); // TODO need to check if this is of a good type
 
-        
-
         const cloud_event:CloudEventContainer = {
             device_meta_data:null,
             event_name:EventStrings.RESOLVE_EVENT,
@@ -163,7 +157,7 @@ class ScriptEventEmitter {
         this.eventEmitter = new EventEmitter();
 
         console.log( "ws.device_meta_data..." );
-        console.log( ws.device_meta_data );
+        console.log( this.getWsClient().device_meta_data );
         
         console.log(" is open ");
 
