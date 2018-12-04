@@ -35,15 +35,7 @@ class ExpressServer{
                 reject();
             });
         });
-
-        // cloud_event_emitter.on( EventStrings.ADD_EXPRESS_ENDPOINT, ()=>{
-        //     console.log("EventStrings.ADD_EXPRESS_ENDPOINT in express file");
-        // });
-
-        // cloud_event_emitter.on( EventStrings.REMOVE_EXPRESS_ENDPOINT, ()=>{
-        //     console.log("EventStrings.REMOVE_EXPRESS_ENDPOINT in express file");
-        // });
-
+        
         this.startPromise.then(()=>{
             // this.app.all("*",(req:any, res:any)=>{
             //     res.status(400).json({err:"no endpoint triggered"})

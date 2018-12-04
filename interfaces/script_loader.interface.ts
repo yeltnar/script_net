@@ -38,6 +38,9 @@ enum  EventStrings{
     SHELL = "SHELL",
     SHELL_HTTP = "SHELL_HTTP",
 
+    PERMISSION_SITE_CLOUD = "PERMISSION_SITE_CLOUD",
+    PERMISSION_SITE_LOCAL = "PERMISSION_SITE_LOCAL",
+
 }
 
 // registers an attached device 
