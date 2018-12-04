@@ -101,13 +101,15 @@ class WsServer{
 
                 if( script_name && device_name && group_name && parser_token && connection_id && script_net_connector_token ){
 
+                    const {url} = info.req;
+
                     if( script_name==="verifier" && this.checkTokenAddedLocal(script_net_connector_token) ){
 
                         // good to go
                         console.log("verifier good to go")
                         callback(true);
 
-                    }else if( await(this.checkTokenAddedCloud(script_net_connector_token, script_name)) ){
+                    }else if( await(this.checkTokenAddedCloud(script_net_connector_token, {...queryData, url})) ){
 
                         // good to go
                         console.log("good to go")
@@ -428,7 +430,7 @@ class WsServer{
         return token_good;
     }
 
-    private checkTokenAddedCloud = (script_net_connector_token:string, script_name:string):Promise<boolean>=>{
+    private checkTokenAddedCloud = (script_net_connector_token:string, queryData:object):Promise<boolean>=>{
 
         console.log("checkTokenAddedCloud");
 
@@ -442,7 +444,7 @@ class WsServer{
                     uuid:uuid_v4(),
                     data:{
                         script_net_connector_token,
-                        script_name
+                        queryData
                     }
                 },
             };

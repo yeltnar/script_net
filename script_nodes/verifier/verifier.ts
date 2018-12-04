@@ -60,11 +60,13 @@ function do_start(){
 
             let result = false;
 
-            let {script_net_connector_token, script_name} = data.event.data;
+            let {script_net_connector_token, ws_request_data} = data.event.data;
 
-            if( script_net_connector_token!==undefined && script_name!==undefined ){
+            script_net_connector_token = sha512HexHash(script_net_connector_token);
 
-                result = checkToken( script_net_connector_token, script_name )
+            if( script_net_connector_token!==undefined && ws_request_data!==undefined ){
+
+                result = checkToken( script_net_connector_token, ws_request_data )
                 return {result};
 
             }else{
@@ -77,7 +79,7 @@ function do_start(){
 
 }
 
-function checkToken( script_net_connector_token:string, script_name:string ):boolean{
+function checkToken( script_net_connector_token:string, ws_request_data:object ):boolean{
 
     const exists = fs.existsSync(file_path);
     let approved = false;
@@ -98,7 +100,7 @@ function checkToken( script_net_connector_token:string, script_name:string ):boo
     }
 
     master_obj[script_net_connector_token] = {
-        script_name,
+        ws_request_data,
         script_net_connector_token,
         approved
     }
