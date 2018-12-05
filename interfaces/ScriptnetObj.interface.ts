@@ -9,7 +9,8 @@ interface ScriptNetClientObj{
     device_name:string,
     group_name:string,
     parser_token:string,
-    connection_id:string
+    connection_id:string,
+    script_net_connector_token:string,
 }
 
 export {ScriptNetServerObj,ScriptNetClientObj}

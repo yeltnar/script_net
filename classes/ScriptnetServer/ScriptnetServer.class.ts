@@ -6,6 +6,8 @@ import {ScriptNetServerObj,ScriptNetClientObj} from "../../interfaces/ScriptnetO
 
 import {HttpReturn} from "../ScriptEventEmitter.class"
 
+import get_script_net_connector_token from "../../helpers/uuid_token_manager";
+
 const EventEmitter = require("events");
 
 import {EventStrings, AddExpressEndpointContainer, WsEventType, CloudEventContainer, ExpressReplyContainer, EventContainer, RemoveExpressRouterContainer} from "../../interfaces/script_loader.interface"
@@ -24,6 +26,8 @@ const {
     local_protocol, 
     remote_protocol
 } = local_config;
+
+const script_net_connector_token = get_script_net_connector_token();
 
 const protocol = process.env.BLUEMIX_REGION===undefined ? local_protocol : remote_protocol; // I think this should stay at local host, // TODO fix this and use config
 const address = process.env.BLUEMIX_REGION===undefined ? local_address : remote_address; // I think this should stay at local host
@@ -44,7 +48,8 @@ class ScriptnetServer {
         device_name,
         group_name,
         parser_token, // TODO fix
-        connection_id:uuid_v4()
+        connection_id:uuid_v4(),
+        script_net_connector_token
     };
 
     constructor( doneCallback? ){
