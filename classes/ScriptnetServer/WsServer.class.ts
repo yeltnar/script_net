@@ -417,6 +417,10 @@ class WsServer{
         let token_good = false;
 
         token_good = master_token_hash === sha512HexHash( script_net_connector_token );
+        
+        //TODO remove
+        console.log("//TODO remove script_net_connector_token");
+        console.log(script_net_connector_token);
 
         console.log("sha512HexHash( script_net_connector_token )")
         console.log(sha512HexHash( script_net_connector_token ))
