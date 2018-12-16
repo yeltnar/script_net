@@ -105,7 +105,7 @@ function checkToken( script_net_connector_token:string, ws_request_data:object )
         approved
     }
 
-    fs.writeFileSync( file_path, JSON.stringify(master_obj) );
+    fs.writeFileSync( file_path, JSON.stringify(master_obj, null, 2) );
 
     return approved;
 }
