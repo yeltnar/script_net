@@ -102,7 +102,8 @@ function checkToken( script_net_connector_token:string, ws_request_data:object )
     master_obj[script_net_connector_token] = {
         ws_request_data,
         script_net_connector_token,
-        approved
+        approved,
+        date:(new Date()).toString()
     }
 
     fs.writeFileSync( file_path, JSON.stringify(master_obj, null, 2) );
