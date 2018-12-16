@@ -62,3 +62,5 @@ typings/
 
 config/local.json
 */config/local.json
+
+*/.script_id
