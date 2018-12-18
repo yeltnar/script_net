@@ -12,6 +12,9 @@ const start_file = process.argv[2] || "start.json";
 
 const scriptArr:[script_info] = JSON.parse( fs.readFileSync(start_file).toString() );
 
+const script_file_name = "t.sh";
+const script_file_location = "./"+script_file_name;
+
 pm2.connect(function(err) {
     if (err) {
       console.error(err);
@@ -25,6 +28,8 @@ pm2.connect(function(err) {
         promise_arr.push(new Promise((resolve, reject)=>{
 
             const { script, args, cwd, name } = cur;
+
+            fs.copyFileSync(script_file_location, cwd+"/"+script_file_name);
 
             console.log({ script, args, cwd, name })
 
