@@ -3,6 +3,8 @@ import {WsEventType, AddExpressEndpointContainer, CloudEventContainer, checkClou
 import {ScriptNetClientObj} from "../../interfaces/ScriptnetObj.interface"
 import sha512HexHash from "../../helpers/crypto"
 
+import get_script_net_connector_token from "../../helpers/uuid_token_manager";
+
 const {exec, execFile} = require("child_process")
 const config = require("config");
 const requestP = require("request-promise-native");
@@ -30,6 +32,7 @@ function do_start(){
 
     const scriptnet_client_obj:ScriptNetClientObj = local_config.scriptnet_client_obj;
     scriptnet_client_obj.connection_id = uuid_v4();
+    scriptnet_client_obj.script_net_connector_token = get_script_net_connector_token();
 
     new ScriptEventEmitter(scriptnet_server_obj,scriptnet_client_obj, doneCallback);
 

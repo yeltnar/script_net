@@ -9,7 +9,7 @@
     },
 
     "scriptnet_client_obj":{
-        "script_name":"shell",
+        "script_name":"ws_ping_test",
         "device_name":"DEVICE_NAME_NOT_PROVIDED",
         "group_name":"GROUP_NAME_NOT_PROVIDED",
         "parser_token":"PARSER_TOKEN_NOT_PROVIDED"
