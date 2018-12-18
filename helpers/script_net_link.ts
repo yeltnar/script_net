@@ -37,8 +37,8 @@ function addEvent(script_event_emitter: ScriptEventEmitter, event_string: EventS
     return script_event_emitter.on_smart(event_string, f);
 }
 
-function addHttpEndpoint(script_event_emitter: ScriptEventEmitter, event_string, f: EventEmitterCallbackHttp) {
+function addHttpEvent(script_event_emitter: ScriptEventEmitter, event_string, f: EventEmitterCallbackHttp) {
     return script_event_emitter.on_smart_http(event_string, f);
 }
 
-export { addExpressEndpoint, bindCloudEventToLocalEvent, addEvent, addHttpEndpoint }
+export { addExpressEndpoint, bindCloudEventToLocalEvent, addEvent, addHttpEvent }

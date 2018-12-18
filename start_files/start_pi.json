@@ -20,5 +20,12 @@
         "args":[
             "./remote_shell"
         ]
+    },{
+        "name":"automatic_obd",
+        "script":"t.sh",
+        "cwd":"../script_nodes/automatic_obd",
+        "args":[
+            "./automatic_obd"
+        ]
     }
 ]
