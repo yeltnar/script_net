@@ -63,4 +63,7 @@ typings/
 config/local.json
 */config/local.json
 
+message.txt
+
 */.script_id
+.script_id
