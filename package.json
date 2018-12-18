@@ -9,7 +9,9 @@
   "scripts": {
     "test": "clear; ts-node test.ts",
     "start": "ts-node scriptnet_server.ts",
-    "preinstall": "npm -v;node -v;npm i -g typescript; npm i -g ts-node;"
+    "start_pi": "cd start_files && ts-node start.ts \"start_pi.json\"",
+    "install-dependencies": "npm -v;node -v;npm i -g typescript; npm i -g ts-node;",
+    "setup": "./setup.sh"
   },
   "repository": {
     "type": "git",
