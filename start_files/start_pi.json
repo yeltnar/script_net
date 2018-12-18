@@ -1,0 +1,24 @@
+[
+    {
+        "name":"verifier",
+        "script":"t.sh",
+        "cwd":"../script_nodes/verifier",
+        "args":[
+            "./verifier"
+        ]
+    },{
+        "name":"notify",
+        "script":"t.sh",
+        "cwd":"../script_nodes/notification",
+        "args":[
+            "./notify"
+        ]
+    },{
+        "name":"remote_shell",
+        "script":"t.sh",
+        "cwd":"../script_nodes/remote_shell",
+        "args":[
+            "./remote_shell"
+        ]
+    }
+]
