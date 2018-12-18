@@ -9,7 +9,9 @@
   "scripts": {
     "test": "clear; ts-node test.ts",
     "start": "ts-node scriptnet_server.ts",
-    "preinstall": "npm -v;node -v;npm i -g typescript; npm i -g ts-node;"
+    "start_pi": "cd start_files && ts-node start.ts \"start_pi.json\"",
+    "install-dependencies": "npm -v;node -v;npm i -g typescript; npm i -g ts-node;",
+    "setup": "./setup.sh"
   },
   "repository": {
     "type": "git",
@@ -23,7 +25,7 @@
   "homepage": "https://github.com/yeltnar/script_net#readme",
   "dependencies": {
     "@types/node": "^10.11.3",
-    "config": "^2.0.1",
+    "config": "^2.0.2",
     "events": "^3.0.0",
     "express": "^4.16.4",
     "isomorphic-ws": "^4.0.1",
