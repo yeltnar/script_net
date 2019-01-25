@@ -206,4 +206,4 @@ class ScriptEventEmitter {
 
 }
 
-export {ScriptEventEmitter, uuid_v4, HttpReturn}
+export {ScriptEventEmitter, uuid_v4, HttpReturn, EventEmitterCallback, EventEmitterCallbackHttp}
